@@ -33,16 +33,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       if (otp == "888888" || otp == "123456") {
+        setState(() => _isLoading = false);
         Provider.of<AuthProvider>(context, listen: false).triggerDemoMode();
+        
+        // Professional Navigation: Clear stack and go to wrapper
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
         return;
       }
+
       await _authService.signInWithOtp(widget.verificationId, otp);
-      // AuthWrapper will automatically switch to the next screen because of authStateChanges
+      
+      // For real auth, the AuthProvider listener will trigger a rebuild of AuthWrapper,
+      // but we still need to clear the navigator stack.
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+      
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid code: $e')),
+        SnackBar(content: Text('Verification Failed: $e')),
       );
     }
   }

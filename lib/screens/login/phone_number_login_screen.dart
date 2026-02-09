@@ -39,30 +39,85 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
     // Formatted phone: Dynamic prefix + input
     final fullPhone = '+${_selectedCountry.phoneCode}$phone';
 
-    await _authService.verifyPhone(
-      phoneNumber: fullPhone,
-      verificationCompleted: (credential) async {
-        // Handle auto-verification if needed
-      },
-      verificationFailed: (e) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Verification Failed: ${e.message}')),
-        );
-      },
-      codeSent: (verificationId, resendToken) {
-        setState(() => _isLoading = false);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpVerificationScreen(
-              verificationId: verificationId,
-              phoneNumber: fullPhone,
+    try {
+      await _authService.verifyPhone(
+        phoneNumber: fullPhone,
+        verificationCompleted: (credential) async {
+          // Handle auto-verification if needed
+        },
+        verificationFailed: (e) {
+          setState(() => _isLoading = false);
+          _showDemoBypassDialog(fullPhone, e.message ?? 'Network Error');
+        },
+        codeSent: (verificationId, resendToken) {
+          setState(() => _isLoading = false);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                verificationId: verificationId,
+                phoneNumber: fullPhone,
+              ),
             ),
+          );
+        },
+        codeAutoRetrievalTimeout: (verificationId) {},
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showDemoBypassDialog(fullPhone, e.toString());
+    }
+  }
+
+  void _showDemoBypassDialog(String phoneNumber, String error) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 10),
+            Text('Network Issue'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Firebase SMS service is unreachable (Likely DNS/Network).'),
+            const SizedBox(height: 10),
+            Text('Error: $error', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 20),
+            const Text('Would you like to use Demo Mode for testing?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Retry'),
           ),
-        );
-      },
-      codeAutoRetrievalTimeout: (verificationId) {},
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtpVerificationScreen(
+                    verificationId: "demo_id",
+                    phoneNumber: phoneNumber,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Use Demo Code (888888)'),
+          ),
+        ],
+      ),
     );
   }
 

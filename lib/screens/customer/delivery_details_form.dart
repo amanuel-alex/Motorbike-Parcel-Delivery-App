@@ -26,19 +26,41 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
 
   final DeliveryService _deliveryService = DeliveryService();
 
-  void _calculatePrice() {
+  bool _isCalculating = false;
+
+  Future<void> _calculatePrice() async {
     if (selectedPickupZone != null && selectedDropZone != null) {
-      if (selectedPickupZone == selectedDropZone) {
-        setState(() {
-          estimatedPrice = AppConstants.baseSameZonePrice; 
-          isRouteAvailable = true;
-        });
-      } else {
-        final price = AppConstants.zonePrices[selectedPickupZone]?[selectedDropZone];
-        setState(() {
-          estimatedPrice = price;
-          isRouteAvailable = price != null;
-        });
+      setState(() => _isCalculating = true);
+      
+      try {
+        if (selectedPickupZone == selectedDropZone) {
+          setState(() {
+            estimatedPrice = AppConstants.baseSameZonePrice; 
+            isRouteAvailable = true;
+          });
+        } else {
+          // 1. Try Firestore Real-Time Price
+          final firestorePrice = await _deliveryService.getEstimatedPrice(
+            selectedPickupZone!, 
+            selectedDropZone!,
+          );
+          
+          if (firestorePrice != null) {
+            setState(() {
+              estimatedPrice = firestorePrice;
+              isRouteAvailable = true;
+            });
+          } else {
+            // 2. Fallback to Local Constants
+            final localPrice = AppConstants.zonePrices[selectedPickupZone]?[selectedDropZone];
+            setState(() {
+              estimatedPrice = localPrice;
+              isRouteAvailable = localPrice != null;
+            });
+          }
+        }
+      } finally {
+        if (mounted) setState(() => _isCalculating = false);
       }
     }
   }
@@ -218,32 +240,36 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, right: 4),
-                child: Text(
-                  'ETB',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+          _isCalculating 
+            ? const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, right: 4),
+                    child: Text(
+                      'ETB',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  Text(
+                    estimatedPrice!.toStringAsFixed(0),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 64,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                estimatedPrice!.toStringAsFixed(0),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

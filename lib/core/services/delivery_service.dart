@@ -4,6 +4,36 @@ import '../models/delivery_model.dart';
 class DeliveryService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Real-Time Price Fetching (Requirement: Calculates price from ZonePrices collection)
+  Future<double?> getEstimatedPrice(String pickup, String dropoff) async {
+    try {
+      // Logic: Look for exact route match in Firestore
+      final query = await _firestore
+          .collection('ZonePrices')
+          .where('pickup', isEqualTo: pickup)
+          .where('dropoff', isEqualTo: dropoff)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        return (query.docs.first.data()['price'] as num).toDouble();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get list of available zones (Requirement: Zones collection)
+  Future<List<String>> getZones() async {
+    try {
+      final query = await _firestore.collection('Zones').get();
+      return query.docs.map((doc) => doc.data()['name'] as String).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   // Create a new delivery request (Denormalized)
   Future<void> createDelivery(Delivery delivery) async {
     final Map<String, dynamic> data = delivery.toMap();
