@@ -97,17 +97,13 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // Map Placeholder
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  margin: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://api.placeholder.com/400/200?text=Live+Route+Map'),
-                      fit: BoxFit.cover,
-                    ),
+                const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: SafeNetworkImage(
+                    imageUrl: 'https://api.placeholder.com/400/200?text=Live+Route+Map',
+                    height: 200,
+                    width: double.infinity,
+                    borderRadius: 24,
                   ),
                 ),
                 

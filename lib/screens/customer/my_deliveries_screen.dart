@@ -158,16 +158,11 @@ class MyDeliveriesScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                width: 50,
+              const SafeNetworkImage(
+                imageUrl: 'https://api.placeholder.com/100/100?text=Map',
                 height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: NetworkImage('https://api.placeholder.com/100/100?text=Map'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                width: 50,
+                borderRadius: 12,
               ),
             ],
           ),

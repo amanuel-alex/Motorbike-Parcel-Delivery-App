@@ -112,22 +112,25 @@ class _ConfirmDeliveryScreenState extends State<ConfirmDeliveryScreen> {
               const SizedBox(height: 32),
               
               // Photo Preview
-              Container(
-                height: 350,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: _isPhotoCaptured ? AppColors.delivered : const Color(0xFFE2E8F0), width: 2),
-                  image: _isPhotoCaptured ? DecorationImage(
-                    image: NetworkImage(_photoUrl!),
-                    fit: BoxFit.cover,
-                  ) : null,
-                ),
-                child: !_isPhotoCaptured ? const Center(
-                  child: Icon(Icons.add_a_photo_outlined, color: AppColors.textTertiary, size: 60),
-                ) : null,
-              ),
+              _isPhotoCaptured 
+                ? SafeNetworkImage(
+                    imageUrl: _photoUrl!,
+                    height: 350,
+                    width: double.infinity,
+                    borderRadius: 32,
+                  )
+                : Container(
+                    height: 350,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.add_a_photo_outlined, color: AppColors.textTertiary, size: 60),
+                    ),
+                  ),
 
               const SizedBox(height: 32),
 

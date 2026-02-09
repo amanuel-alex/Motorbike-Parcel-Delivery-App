@@ -187,42 +187,43 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               
               const SizedBox(height: 32),
               // Map Snippet
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: const DecorationImage(
-                    image: NetworkImage('https://api.placeholder.com/400/120?text=Logistics+Center+Map'),
-                    fit: BoxFit.cover,
+              Stack(
+                alignment: Alignment.bottomLeft,
+                children: [
+                  const SafeNetworkImage(
+                    imageUrl: 'https://api.placeholder.com/400/120?text=Logistics+Center+Map',
+                    height: 120,
+                    width: double.infinity,
+                    borderRadius: 20,
                   ),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
+                  Container(
+                    height: 120,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                    alignment: Alignment.bottomLeft,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'MAIN LOGISTICS CENTER',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Text(
+                          'Wilkinson Road, Freetown',
+                          style: TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                      ],
                     ),
                   ),
-                  alignment: Alignment.bottomLeft,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'MAIN LOGISTICS CENTER',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Wilkinson Road, Freetown',
-                        style: TextStyle(color: Colors.white70, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
               const SizedBox(height: 16),
               const Text(

@@ -119,19 +119,14 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
               const SizedBox(height: 32),
               
               // Map Placeholder
-              Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0).withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(24),
-                  image: const DecorationImage(
-                    image: NetworkImage('https://api.placeholder.com/400/200?text=Map+View'),
-                    fit: BoxFit.cover,
+              Stack(
+                children: [
+                  const SafeNetworkImage(
+                    imageUrl: 'https://api.placeholder.com/400/200?text=Map+View',
+                    height: 180,
+                    width: double.infinity,
+                    borderRadius: 24,
                   ),
-                ),
-                child: Stack(
-                  children: [
                     Positioned(
                       bottom: 12,
                       left: 12,
@@ -150,8 +145,7 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 120), // Bottom bar space
+                const SizedBox(height: 120), // Bottom bar space
             ],
           ),
         ),

@@ -104,3 +104,79 @@ class StatusBadge extends StatelessWidget {
     );
   }
 }
+class SafeNetworkImage extends StatelessWidget {
+  final String imageUrl;
+  final double? height;
+  final double? width;
+  final double borderRadius;
+  final BoxFit fit;
+
+  const SafeNetworkImage({
+    super.key,
+    required this.imageUrl,
+    this.height,
+    this.width,
+    this.borderRadius = 0,
+    this.fit = BoxFit.cover,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Image.network(
+          imageUrl,
+          height: height,
+          width: width,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: const Color(0xFFF8FAFC),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.textTertiary.withOpacity(0.5),
+                    size: height != null && height! < 100 ? 24 : 40,
+                  ),
+                  if (height == null || height! >= 100) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Preview Unavailable',
+                      style: TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: AppColors.primary.withOpacity(0.3),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
