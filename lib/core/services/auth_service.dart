@@ -8,6 +8,9 @@ class AuthService {
   // Stream of auth changes
   Stream<User?> get user => _auth.authStateChanges();
 
+  // Demo Mode Flag for Presentation
+  static bool isDemoMode = false;
+
   // Sign in with phone number (Trigger)
   Future<void> verifyPhone({
     required String phoneNumber,
@@ -26,7 +29,13 @@ class AuthService {
   }
 
   // Verify OTP
-  Future<UserCredential> signInWithOtp(String verificationId, String smsCode) async {
+  Future<UserCredential?> signInWithOtp(String verificationId, String smsCode) async {
+    // Presentation Bypass
+    if (smsCode == "888888") {
+      isDemoMode = true;
+      return null; 
+    }
+
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
       smsCode: smsCode,
@@ -41,6 +50,8 @@ class AuthService {
 
   // Get user role
   Future<String?> getUserRole(String uid) async {
+    if (isDemoMode) return 'customer'; // Default for demo
+
     DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
       return (doc.data() as Map<String, dynamic>)['role'];

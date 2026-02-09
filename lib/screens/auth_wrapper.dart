@@ -5,6 +5,7 @@ import '../screens/login/phone_number_login_screen.dart';
 import '../screens/login/role_selection_screen.dart';
 import '../screens/customer/customer_home_screen.dart';
 import '../screens/rider/available_jobs_screen.dart';
+import '../core/services/auth_service.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -13,8 +14,8 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    // 1. Check if user is logged in
-    if (authProvider.user == null) {
+    // 1. Check if user is logged in (or in Demo Mode)
+    if (authProvider.user == null && !AuthService.isDemoMode) {
       return const PhoneNumberLoginScreen();
     }
 

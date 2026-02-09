@@ -38,6 +38,13 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    AuthService.isDemoMode = false;
     await _authService.signOut();
+  }
+
+  void triggerDemoMode() {
+    AuthService.isDemoMode = true;
+    _userRole = 'customer';
+    notifyListeners();
   }
 }

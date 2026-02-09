@@ -116,7 +116,7 @@ class CustomerHomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Send parcels across Accra instantly with\nour trusted riders.',
+                      'Send parcels across Addis Ababa instantly with\nour trusted riders.',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
                         fontSize: 14,
@@ -124,7 +124,7 @@ class CustomerHomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
-                      width: 180,
+                      width: 200,
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -141,6 +141,7 @@ class CustomerHomeScreen extends StatelessWidget {
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: const [
                             Text('Send a Parcel'),
                             SizedBox(width: 8),
