@@ -5,6 +5,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
+import '../../core/services/auth_service.dart';
 import 'create_delivery_screen.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
@@ -24,9 +25,9 @@ class CustomerHomeScreen extends StatelessWidget {
             // Premium Header with User Info
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+              padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 32),
               decoration: const BoxDecoration(
-                color: Color(0xFF1E293B),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
@@ -35,6 +36,16 @@ class CustomerHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (AuthService.isDemoMode)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      child: ActionChip(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        label: const Text('DEMO: SWITCH TO RIDER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('rider'),
+                        avatar: const Icon(Icons.moped, color: Colors.white, size: 14),
+                      ),
+                    ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

@@ -6,6 +6,7 @@ import 'job_details_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
+import '../../core/services/auth_service.dart';
 
 class AvailableJobsScreen extends StatelessWidget {
   const AvailableJobsScreen({super.key});
@@ -34,6 +35,18 @@ class AvailableJobsScreen extends StatelessWidget {
           ),
           centerTitle: false,
           actions: [
+            if (AuthService.isDemoMode)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Center(
+                  child: ActionChip(
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    label: const Text('DEMO: CUSTOMER', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                    onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('customer'),
+                    avatar: const Icon(Icons.person, color: AppColors.primary, size: 14),
+                  ),
+                ),
+              ),
             Container(
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.all(8),

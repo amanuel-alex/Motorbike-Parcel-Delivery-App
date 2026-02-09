@@ -17,20 +17,24 @@ class AuthProvider extends ChangeNotifier {
       _user = user;
       if (user != null) {
         _userRole = await _authService.getUserRole(user.uid);
-        // Professional Touch: Update metadata on login
         await _authService.updateMetadata(user.uid);
-      } else {
+      } else if (!AuthService.isDemoMode) {
         _userRole = null;
       }
+      debugPrint('Auth Update: Role=$_userRole, Demo=${AuthService.isDemoMode}');
       notifyListeners();
     });
   }
 
   Future<void> setRole(String role, {String? phoneNumber}) async {
-    if (_user != null) {
+    if (_user != null || AuthService.isDemoMode) {
       _isLoading = true;
       notifyListeners();
-      await _authService.setUserRole(_user!.uid, role, phoneNumber: phoneNumber);
+      
+      if (_user != null) {
+        await _authService.setUserRole(_user!.uid, role, phoneNumber: phoneNumber);
+      }
+      
       _userRole = role;
       _isLoading = false;
       notifyListeners();

@@ -50,7 +50,7 @@ class AuthService {
 
   // Get user role
   Future<String?> getUserRole(String uid) async {
-    if (isDemoMode) return 'customer'; // Default for demo
+    if (isDemoMode) return 'customer'; 
 
     DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
