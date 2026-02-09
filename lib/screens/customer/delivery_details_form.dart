@@ -7,6 +7,9 @@ import '../../core/models/delivery_model.dart';
 import '../../providers/auth_provider.dart';
 import '../payment/payment_instructions_screen.dart';
 
+import '../../core/utils/error_handler.dart';
+import '../../core/constants/app_constants.dart';
+
 class DeliveryDetailsForm extends StatefulWidget {
   const DeliveryDetailsForm({super.key});
 
@@ -23,21 +26,15 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
 
   final DeliveryService _deliveryService = DeliveryService();
 
-  final Map<String, Map<String, double>> zonePrices = {
-    'Bole': {'Arada': 150.0, 'Kirkos': 120.0, 'Yeka': 180.0},
-    'Arada': {'Bole': 155.0, 'Kirkos': 100.0, 'Yeka': 130.0},
-    'Kirkos': {'Bole': 110.0, 'Arada': 95.0, 'Yeka': 160.0},
-  };
-
   void _calculatePrice() {
     if (selectedPickupZone != null && selectedDropZone != null) {
       if (selectedPickupZone == selectedDropZone) {
         setState(() {
-          estimatedPrice = 80.0; // Same zone delivery
+          estimatedPrice = AppConstants.baseSameZonePrice; 
           isRouteAvailable = true;
         });
       } else {
-        final price = zonePrices[selectedPickupZone]?[selectedDropZone];
+        final price = AppConstants.zonePrices[selectedPickupZone]?[selectedDropZone];
         setState(() {
           estimatedPrice = price;
           isRouteAvailable = price != null;
@@ -82,9 +79,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
         MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create delivery: $e')),
-      );
+      ErrorHandler.showError(context, e);
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
@@ -353,7 +348,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
   }
 
   void _showZonePicker(bool isPickup) {
-    final zones = ['Bole', 'Arada', 'Kirkos', 'Yeka', 'Kolfe'];
+    final zones = AppConstants.availableZones;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(

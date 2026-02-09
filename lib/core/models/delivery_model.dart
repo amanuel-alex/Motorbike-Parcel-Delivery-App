@@ -1,5 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class DeliveryEvent {
+  final String type;
+  final DateTime at;
+
+  DeliveryEvent({required this.type, required this.at});
+
+  factory DeliveryEvent.fromMap(Map<String, dynamic> data) {
+    return DeliveryEvent(
+      type: data['type'] ?? 'unknown',
+      at: (data['at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type,
+      'at': Timestamp.fromDate(at),
+    };
+  }
+}
+
 class Delivery {
   final String id;
   final String customerId;
@@ -10,6 +31,7 @@ class Delivery {
   final double price;
   final String packageType;
   final DateTime createdAt;
+  final List<DeliveryEvent> events;
 
   // Denormalized Fields (Pro Moves)
   final String? pickupZoneName;
@@ -33,6 +55,7 @@ class Delivery {
     required this.price,
     required this.packageType,
     required this.createdAt,
+    this.events = const [],
     this.pickupZoneName,
     this.dropZoneName,
     this.customerPhone,
@@ -55,6 +78,9 @@ class Delivery {
       price: (data['price'] ?? 0).toDouble(),
       packageType: data['packageType'] ?? 'Document',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      events: (data['events'] as List? ?? [])
+          .map((e) => DeliveryEvent.fromMap(e as Map<String, dynamic>))
+          .toList(),
       pickupZoneName: data['pickupZoneName'],
       dropZoneName: data['dropZoneName'],
       customerPhone: data['customerPhone'],
@@ -76,6 +102,7 @@ class Delivery {
       'price': price,
       'packageType': packageType,
       'createdAt': FieldValue.serverTimestamp(),
+      'events': events.map((e) => e.toMap()).toList(),
       'pickupZoneName': pickupZoneName,
       'dropZoneName': dropZoneName,
       'customerPhone': customerPhone,

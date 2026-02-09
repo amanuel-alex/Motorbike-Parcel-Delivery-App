@@ -6,7 +6,11 @@ class DeliveryService {
 
   // Create a new delivery request (Denormalized)
   Future<void> createDelivery(Delivery delivery) async {
-    await _firestore.collection('deliveries').add(delivery.toMap());
+    final Map<String, dynamic> data = delivery.toMap();
+    data['events'] = FieldValue.arrayUnion([
+      {'type': 'created', 'at': Timestamp.now()}
+    ]);
+    await _firestore.collection('deliveries').add(data);
   }
 
   // Get stream of pending deliveries for riders
@@ -47,6 +51,9 @@ class DeliveryService {
         'riderPhone': riderPhone,
         'status': 'accepted',
         'acceptedAt': FieldValue.serverTimestamp(),
+        'events': FieldValue.arrayUnion([
+          {'type': 'accepted', 'at': Timestamp.now()}
+        ]),
       });
       return true;
     });
@@ -58,6 +65,9 @@ class DeliveryService {
       'status': 'picked',
       'pickupPhotoUrl': photoUrl,
       'pickupUploadedAt': FieldValue.serverTimestamp(),
+      'events': FieldValue.arrayUnion([
+        {'type': 'picked', 'at': Timestamp.now()}
+      ]),
     });
   }
 
@@ -67,6 +77,9 @@ class DeliveryService {
       'status': 'completed',
       'dropoffPhotoUrl': photoUrl,
       'dropUploadedAt': FieldValue.serverTimestamp(),
+      'events': FieldValue.arrayUnion([
+        {'type': 'completed', 'at': Timestamp.now()}
+      ]),
     });
   }
 }

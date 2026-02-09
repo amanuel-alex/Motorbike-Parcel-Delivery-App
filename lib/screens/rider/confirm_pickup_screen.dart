@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
+import '../../core/services/storage_service.dart';
 import 'confirm_delivery_screen.dart';
 
 class ConfirmPickupScreen extends StatefulWidget {
@@ -20,28 +23,52 @@ class ConfirmPickupScreen extends StatefulWidget {
 
 class _ConfirmPickupScreenState extends State<ConfirmPickupScreen> {
   final DeliveryService _deliveryService = DeliveryService();
+  final StorageService _storageService = StorageService();
+  final ImagePicker _picker = ImagePicker();
+  
   bool _isPhotoCaptured = false;
   bool _isUploading = false;
   String? _photoUrl;
+  File? _imageFile;
 
-  void _simulateCamera() {
-    setState(() {
-      _isUploading = true;
-    });
+  Future<void> _captureAndUploadPhoto() async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+      );
 
-    // Simulate upload delay
-    Future.delayed(const Duration(seconds: 2), () {
+      if (photo == null) return;
+
+      setState(() {
+        _isUploading = true;
+        _imageFile = File(photo.path);
+      });
+
+      final String downloadUrl = await _storageService.uploadDeliveryPhoto(
+        file: _imageFile!,
+        deliveryId: widget.orderId,
+        type: 'pickup',
+      );
+
       if (mounted) {
         setState(() {
           _isPhotoCaptured = true;
           _isUploading = false;
-          _photoUrl = 'https://api.placeholder.com/400/600?text=Pickup+Proof';
+          _photoUrl = downloadUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Photo uploaded successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Photo uploaded to storage!'), backgroundColor: Colors.green),
         );
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _handleConfirm() async {
@@ -148,7 +175,7 @@ class _ConfirmPickupScreenState extends State<ConfirmPickupScreen> {
                     : Column(
                         children: [
                           OutlinedButton.icon(
-                            onPressed: _simulateCamera,
+                            onPressed: _captureAndUploadPhoto,
                             icon: const Icon(Icons.camera_alt),
                             label: Text(_isPhotoCaptured ? 'Retake Photo' : 'Take Pickup Photo'),
                             style: OutlinedButton.styleFrom(

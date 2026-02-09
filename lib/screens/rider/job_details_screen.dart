@@ -6,6 +6,7 @@ import 'confirm_pickup_screen.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/utils/error_handler.dart';
 
 class JobDetailsScreen extends StatefulWidget {
   final String deliveryId;
@@ -54,9 +55,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ErrorHandler.showError(context, e);
     } finally {
       if (mounted) setState(() => _isAccepting = false);
     }

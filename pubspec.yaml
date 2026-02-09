@@ -42,6 +42,8 @@ dependencies:
   smooth_page_indicator: ^2.0.1
   shared_preferences: ^2.5.4
   country_picker: ^2.0.27
+  image_picker: ^1.2.1
+  firebase_storage: ^13.0.6
 
 dev_dependencies:
   flutter_test:
