@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../models/delivery_model.dart';
+import 'auth_service.dart';
 
 class DeliveryService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -36,11 +38,27 @@ class DeliveryService {
 
   // Create a new delivery request (Denormalized)
   Future<void> createDelivery(Delivery delivery) async {
+    // Demo Mode: Simulate success for presentations if network is unstable
+    if (AuthService.isDemoMode) {
+      await Future.delayed(const Duration(seconds: 1));
+      return;
+    }
+
     final Map<String, dynamic> data = delivery.toMap();
     data['events'] = FieldValue.arrayUnion([
       {'type': 'created', 'at': Timestamp.now()}
     ]);
-    await _firestore.collection('deliveries').add(data);
+
+    try {
+      await _firestore.collection('deliveries')
+          .add(data)
+          .timeout(const Duration(seconds: 8));
+    } catch (e) {
+      if (e is TimeoutException) {
+        throw 'Network Timeout: Your request is saved locally but could not reach the server. Please check your connection.';
+      }
+      rethrow;
+    }
   }
 
   // Get stream of pending deliveries for riders
