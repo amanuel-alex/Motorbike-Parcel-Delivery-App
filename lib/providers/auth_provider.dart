@@ -42,9 +42,14 @@ class AuthProvider extends ChangeNotifier {
     await _authService.signOut();
   }
 
-  void triggerDemoMode() {
+  void triggerDemoMode({String? phoneNumber}) {
     AuthService.isDemoMode = true;
-    _userRole = 'customer';
+    // Boss Hack: If phone contains 000, login as Rider. Otherwise, Customer.
+    if (phoneNumber != null && phoneNumber.contains('000')) {
+      _userRole = 'rider';
+    } else {
+      _userRole = 'customer';
+    }
     notifyListeners();
   }
 }

@@ -37,11 +37,11 @@ class DeliveryService {
   }
 
   // Create a new delivery request (Denormalized)
-  Future<void> createDelivery(Delivery delivery) async {
+  Future<String> createDelivery(Delivery delivery) async {
     // Demo Mode: Simulate success for presentations if network is unstable
     if (AuthService.isDemoMode) {
       await Future.delayed(const Duration(seconds: 1));
-      return;
+      return 'demo_id_${DateTime.now().millisecondsSinceEpoch}';
     }
 
     final Map<String, dynamic> data = delivery.toMap();
@@ -50,15 +50,54 @@ class DeliveryService {
     ]);
 
     try {
-      await _firestore.collection('deliveries')
+      final docRef = await _firestore.collection('deliveries')
           .add(data)
           .timeout(const Duration(seconds: 8));
+      return docRef.id;
     } catch (e) {
       if (e is TimeoutException) {
         throw 'Network Timeout: Your request is saved locally but could not reach the server. Please check your connection.';
       }
       rethrow;
     }
+  }
+
+  // Submit Payment Proof (Requirement: Confirm payment)
+  Future<void> submitPaymentProof({
+    required String deliveryId,
+    required String paymentRef,
+    required String provider,
+    String? screenshotUrl,
+  }) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'paymentRef': paymentRef,
+      'paymentProvider': provider,
+      'paymentScreenshotUrl': screenshotUrl,
+      'paymentStatus': 'pending', // Boss must approve
+      'events': FieldValue.arrayUnion([
+        {
+          'type': 'payment_submitted',
+          'at': Timestamp.now(),
+          'ref': paymentRef,
+          'provider': provider,
+          'hasScreenshot': screenshotUrl != null,
+        }
+      ]),
+    });
+  }
+
+  // Update Payment Status (For Boss/Admin)
+  Future<void> updatePaymentStatus(String deliveryId, String status) async {
+    // status should be 'approved' or 'canceled'
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'paymentStatus': status,
+      'events': FieldValue.arrayUnion([
+        {
+          'type': 'payment_$status',
+          'at': Timestamp.now(),
+        }
+      ]),
+    });
   }
 
   // Get stream of pending deliveries for riders

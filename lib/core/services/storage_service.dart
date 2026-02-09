@@ -23,4 +23,22 @@ class StorageService {
       throw Exception('Failed to upload photo: $e');
     }
   }
+
+  /// Uploads a payment screenshot.
+  Future<String> uploadPaymentScreenshot({
+    required File file,
+    required String deliveryId,
+  }) async {
+    try {
+      final String fileName = 'payment_${DateTime.now().millisecondsSinceEpoch}${path.extension(file.path)}';
+      final Reference ref = _storage.ref().child('payments').child(deliveryId).child(fileName);
+      
+      final UploadTask uploadTask = ref.putFile(file);
+      final TaskSnapshot snapshot = await uploadTask;
+      
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload payment screenshot: $e');
+    }
+  }
 }

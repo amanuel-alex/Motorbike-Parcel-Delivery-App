@@ -118,7 +118,10 @@ class DesignGalleryScreen extends StatelessWidget {
             _buildItem(
               context,
               'Payment Instructions',
-              const PaymentInstructionsScreen(),
+              const PaymentInstructionsScreen(
+                deliveryId: 'MOCK-PAY',
+                amount: 1500,
+              ),
               Icons.payment,
             ),
           ]),

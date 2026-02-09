@@ -34,7 +34,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     try {
       if (otp == "888888" || otp == "123456") {
         setState(() => _isLoading = false);
-        Provider.of<AuthProvider>(context, listen: false).triggerDemoMode();
+        Provider.of<AuthProvider>(context, listen: false).triggerDemoMode(
+          phoneNumber: widget.phoneNumber,
+        );
         
         // Professional Navigation: Clear stack and go to wrapper
         if (!mounted) return;

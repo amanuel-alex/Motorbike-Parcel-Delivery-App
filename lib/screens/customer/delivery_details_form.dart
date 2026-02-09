@@ -85,7 +85,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
         createdAt: DateTime.now(),
       );
 
-      await _deliveryService.createDelivery(delivery);
+      final String deliveryId = await _deliveryService.createDelivery(delivery);
       
       if (!mounted) return;
       
@@ -98,7 +98,12 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
+        MaterialPageRoute(
+          builder: (context) => PaymentInstructionsScreen(
+            deliveryId: deliveryId,
+            amount: estimatedPrice!,
+          ),
+        ),
       );
     } catch (e) {
       ErrorHandler.showError(context, e);

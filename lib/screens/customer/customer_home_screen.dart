@@ -220,6 +220,25 @@ class CustomerHomeScreen extends StatelessWidget {
                 children: [
                   Text(d.status.toUpperCase(), style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1)),
                   Text(d.packageType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (d.paymentStatus != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getPaymentStatusColor(d.paymentStatus!).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Payment: ${d.paymentStatus!.toUpperCase()}',
+                          style: TextStyle(
+                            color: _getPaymentStatusColor(d.paymentStatus!),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const Spacer(),
@@ -237,5 +256,18 @@ class CustomerHomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getPaymentStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'approved':
+        return Colors.green;
+      case 'canceled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

@@ -45,6 +45,12 @@ class Delivery {
   final DateTime? pickupUploadedAt;
   final DateTime? dropUploadedAt;
 
+  // Manual payment verification fields
+  final String? paymentRef;
+  final String? paymentStatus; // pending -> approved -> canceled
+  final String? paymentProvider;
+  final String? paymentScreenshotUrl;
+
   Delivery({
     required this.id,
     required this.customerId,
@@ -64,6 +70,10 @@ class Delivery {
     this.dropoffPhotoUrl,
     this.pickupUploadedAt,
     this.dropUploadedAt,
+    this.paymentRef,
+    this.paymentStatus,
+    this.paymentProvider,
+    this.paymentScreenshotUrl,
   });
 
   factory Delivery.fromFirestore(DocumentSnapshot doc) {
@@ -89,6 +99,10 @@ class Delivery {
       dropoffPhotoUrl: data['dropoffPhotoUrl'],
       pickupUploadedAt: (data['pickupUploadedAt'] as Timestamp?)?.toDate(),
       dropUploadedAt: (data['dropUploadedAt'] as Timestamp?)?.toDate(),
+      paymentRef: data['paymentRef'],
+      paymentStatus: data['paymentStatus'],
+      paymentProvider: data['paymentProvider'],
+      paymentScreenshotUrl: data['paymentScreenshotUrl'],
     );
   }
 
@@ -111,6 +125,10 @@ class Delivery {
       'dropoffPhotoUrl': dropoffPhotoUrl,
       'pickupUploadedAt': pickupUploadedAt != null ? Timestamp.fromDate(pickupUploadedAt!) : null,
       'dropUploadedAt': dropUploadedAt != null ? Timestamp.fromDate(dropUploadedAt!) : null,
+      'paymentRef': paymentRef,
+      'paymentStatus': paymentStatus,
+      'paymentProvider': paymentProvider,
+      'paymentScreenshotUrl': paymentScreenshotUrl,
     };
   }
 }

@@ -97,14 +97,19 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
         createdAt: DateTime.now(),
       );
 
-      await _deliveryService.createDelivery(delivery);
+      final String deliveryId = await _deliveryService.createDelivery(delivery);
       
       if (!mounted) return;
       
       // Navigate to Payment instructions as required
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
+        MaterialPageRoute(
+          builder: (context) => PaymentInstructionsScreen(
+            deliveryId: deliveryId,
+            amount: estimatedPrice!,
+          ),
+        ),
       );
     } catch (e) {
       if (mounted) {

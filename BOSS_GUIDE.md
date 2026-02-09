@@ -45,6 +45,13 @@ This document outlines the step-by-step implementation of the core features for 
 4. **Completion Level**: Rider clicks "Deliver". Multi-photo verification uploaded.
    - Status updates to `completed`.
 
+### Phase 4: Payment Verification & Trust (Boss Reconciliation)
+1. **Proof Submission**: Customer uploads **Screenshot** + **Transaction ID** after mobile transfer (Afrimoney/Airtel).
+2. **Pending State**: App markers job with `paymentStatus: "pending"`.
+3. **Boss Verification**: (V1) Boss checks their mobile money SMS and matches the ID/Ref in the Firestore dashboard.
+4. **Approval**: Boss updates `paymentStatus` to `"approved"` (or `"canceled"` if ID is fake).
+5. **Rider Notification**: Job Details card turns **Green** with the verified ID, giving the rider 100% confidence to deliver.
+
 ---
 
 ## 📊 Database Seeding Utility

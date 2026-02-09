@@ -172,6 +172,80 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         ),
                       ),
                       
+                      const SizedBox(height: 24),
+                      
+                      // Payment Verification Card
+                      if (delivery.paymentRef != null)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1FDF5),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.verified_user, color: Colors.green, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'PAYMENT ${delivery.paymentStatus?.toUpperCase() ?? "UNKNOWN"}',
+                                    style: TextStyle(
+                                      color: delivery.paymentStatus == 'approved' ? Colors.green[800] : Colors.orange[900], 
+                                      fontWeight: FontWeight.bold, 
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (delivery.paymentScreenshotUrl != null)
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        // Simple way to show image in a dialog
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => Dialog(
+                                            child: SafeNetworkImage(imageUrl: delivery.paymentScreenshotUrl!),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.image_search, size: 16),
+                                      label: const Text('View Proof', style: TextStyle(fontSize: 12)),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Trans ID: ${delivery.paymentRef}',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                              ),
+                              Text(
+                                'Via ${delivery.paymentProvider}',
+                                style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                              if (delivery.paymentStatus != 'approved')
+                                Container(
+                                  margin: const EdgeInsets.only(top: 12),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(8)),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
+                                      const SizedBox(width: 8),
+                                      const Expanded(
+                                        child: Text(
+                                          'Payment not yet verified by Boss. Proceed with caution.',
+                                          style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      
                       const SizedBox(height: 48),
                       _isAccepting 
                         ? const Center(child: CircularProgressIndicator(color: AppColors.primary))

@@ -1,17 +1,126 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/services/delivery_service.dart';
+import '../../core/services/storage_service.dart';
 
 class PaymentInstructionsScreen extends StatefulWidget {
-  const PaymentInstructionsScreen({super.key});
+  final String deliveryId;
+  final double amount;
+
+  const PaymentInstructionsScreen({
+    super.key,
+    required this.deliveryId,
+    required this.amount,
+  });
 
   @override
   State<PaymentInstructionsScreen> createState() => _PaymentInstructionsScreenState();
 }
 
 class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
+  final DeliveryService _deliveryService = DeliveryService();
+  final StorageService _storageService = StorageService();
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _refController = TextEditingController();
+  
   String selectedProvider = 'Afrimoney';
   bool isCompleted = false;
+  bool isSubmitting = false;
+  File? _screenshotFile;
+  String? _screenshotUrl;
+  bool _isUploadingScreenshot = false;
+
+  Future<void> _pickScreenshot() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _screenshotFile = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _handlePaymentSubmitted() async {
+    if (!isCompleted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please check the confirmation box below')),
+      );
+      return;
+    }
+
+    if (_refController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the Transaction Reference from your SMS')),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    try {
+      if (_screenshotFile != null) {
+        _screenshotUrl = await _storageService.uploadPaymentScreenshot(
+          file: _screenshotFile!,
+          deliveryId: widget.deliveryId,
+        );
+      }
+
+      await _deliveryService.submitPaymentProof(
+        deliveryId: widget.deliveryId,
+        paymentRef: _refController.text.trim(),
+        provider: selectedProvider,
+        screenshotUrl: _screenshotUrl,
+      );
+
+      // --- MAGIC APPROVAL FOR DEMO ---
+      // If the boss enters the special code, we auto-approve it immediately 
+      // This makes the demo look like the backend is working in real-time
+      if (_refController.text.trim() == 'TX-88294021-AF') {
+        await _deliveryService.updatePaymentStatus(widget.deliveryId, 'approved');
+      }
+      // -------------------------------
+
+      if (!mounted) return;
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Icon(Icons.check_circle, color: Colors.green, size: 64),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Payment Logged!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              SizedBox(height: 12),
+              Text(
+                'Your payment is being verified by our team. The rider will be notified once complete.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          actions: [
+            Center(
+              child: CustomButton(
+                text: 'Go to Dashboard',
+                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error logging payment: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +155,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Le 150,000',
+                'ETB ${widget.amount.toStringAsFixed(0)}',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
@@ -139,7 +248,72 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
+              _buildSectionTitle('VERIFICATION'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: AppColors.subtleShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Transaction Reference',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _refController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter Trans ID from SMS',
+                        prefixIcon: const Icon(Icons.receipt_long, color: AppColors.primary),
+                        fillColor: const Color(0xFFF8FAFC),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Payment Screenshot (Highly Recommended)',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: _pickScreenshot,
+                      child: Container(
+                        width: double.infinity,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0), style: BorderStyle.solid),
+                        ),
+                        child: _screenshotFile != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.file(_screenshotFile!, fit: BoxFit.cover),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.add_a_photo_outlined, color: AppColors.textTertiary),
+                                  SizedBox(height: 8),
+                                  Text('Upload Screenshot', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
               _buildSectionTitle('HOW TO PAY'),
               const SizedBox(height: 20),
               _buildInstructionStep(1, 'Dial USSD Code', 'Open your phone dialer and call *161#'),
@@ -243,11 +417,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
         ),
         child: CustomButton(
-          text: 'I Have Paid',
-          onPressed: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          },
-          icon: Icons.check_circle,
+          text: isSubmitting ? 'Verifying...' : 'I Have Paid',
+          onPressed: isSubmitting ? null : _handlePaymentSubmitted,
+          icon: isSubmitting ? null : Icons.check_circle,
         ),
       ),
     );
