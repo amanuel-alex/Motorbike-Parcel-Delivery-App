@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/services/delivery_service.dart';
+import '../../core/models/delivery_model.dart';
+import '../../providers/auth_provider.dart';
 import '../payment/payment_instructions_screen.dart';
 
 class DeliveryDetailsForm extends StatefulWidget {
@@ -15,6 +19,9 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
   String? selectedDropZone;
   double? estimatedPrice;
   bool isRouteAvailable = true;
+  bool isSubmitting = false;
+
+  final DeliveryService _deliveryService = DeliveryService();
 
   final Map<String, Map<String, double>> zonePrices = {
     'Bole': {'Arada': 150.0, 'Kirkos': 120.0, 'Yeka': 180.0},
@@ -36,6 +43,50 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
           isRouteAvailable = price != null;
         });
       }
+    }
+  }
+
+  Future<void> _handleContinue() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    setState(() => isSubmitting = true);
+
+    try {
+      final delivery = Delivery(
+        id: '', // Firestore sets this
+        customerId: authProvider.user?.uid ?? 'anonymous',
+        customerPhone: authProvider.user?.phoneNumber ?? 'N/A',
+        pickupAddress: selectedPickupZone!,
+        dropoffAddress: selectedDropZone!,
+        pickupZoneName: selectedPickupZone,
+        dropZoneName: selectedDropZone,
+        status: 'pending',
+        price: estimatedPrice!,
+        packageType: 'Document',
+        createdAt: DateTime.now(),
+      );
+
+      await _deliveryService.createDelivery(delivery);
+      
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Delivery created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create delivery: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 
@@ -127,16 +178,15 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
               _buildPlaceholderCard(),
 
             const Spacer(),
-            CustomButton(
-              text: 'Continue to Payment',
-              onPressed: (isRouteAvailable && estimatedPrice != null) 
-                ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
-                  )
-                : null, // Disabled if no route or price
-              icon: Icons.arrow_forward,
-            ),
+            isSubmitting 
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : CustomButton(
+                  text: 'Continue to Payment',
+                  onPressed: (isRouteAvailable && estimatedPrice != null) 
+                    ? _handleContinue
+                    : null, // Disabled if no route or price
+                  icon: Icons.arrow_forward,
+                ),
           ],
         ),
       ),

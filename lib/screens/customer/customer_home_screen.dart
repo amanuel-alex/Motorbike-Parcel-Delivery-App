@@ -3,283 +3,142 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../providers/auth_provider.dart';
-import 'create_delivery_screen.dart'; // Added this import
+import '../../core/services/delivery_service.dart';
+import '../../core/models/delivery_model.dart';
+import 'create_delivery_screen.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final deliveryService = DeliveryService();
+    final user = authProvider.user;
+
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Premium Header with User Info
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1E293B),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: const Color(0xFFFFDAB9),
-                        child: Text(
-                          'KA',
-                          style: TextStyle(
-                            color: AppColors.primaryDark,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome back,',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                          ),
-                          Text(
-                            'Kwame Amanor',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildNotificationIcon(),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        onPressed: () => Provider.of<AuthProvider>(context, listen: false).signOut(),
-                        icon: const Icon(Icons.logout, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              // Quick Delivery Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2E335A), Color(0xFF1C1B33)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF1C1B33).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.bolt, color: AppColors.primary, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          'QUICK DELIVERY',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Need something\ndelivered today?',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            height: 1.1,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Send parcels across Addis Ababa instantly with\nour trusted riders.',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: 200,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Text('Send a Parcel'),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward, size: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Stats
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'BALANCE',
-                      'ETB 240.50',
-                      const Color(0xFFEDFBF5),
-                      Icons.account_balance_wallet,
-                      const Color(0xFF00D084),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'POINTS',
-                      '1,240',
-                      const Color(0xFFFFF9F2),
-                      Icons.military_tech,
-                      AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              
-              // Recent Deliveries
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Recent Deliveries',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('See All', style: TextStyle(color: AppColors.primary)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              
-              // Active Delivery
-              _buildActiveDeliveryCard(),
-              const SizedBox(height: 16),
-              
-              // Delivered Item
-              _buildHistoryCard(
-                'Docs to Airport City',
-                'ID: ZG-8812 • Completed Yesterday',
-                'Spintex Road → Liberation Road',
-                '₵15.00',
-                AppColors.delivered,
-                'DELIVERED',
-                Icons.description_outlined,
-              ),
-              const SizedBox(height: 16),
-              
-              // Canceled Item
-              _buildHistoryCard(
-                'Grocery Pickup',
-                'ID: ZG-7741 • Aug 14',
-                '',
-                '',
-                AppColors.textTertiary,
-                'CANCELED',
-                Icons.shopping_bag_outlined,
-              ),
-              const SizedBox(height: 24),
-              
-              // Referral Card
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF9F2),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Refer a Friend',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Get ₵10 off your next delivery when they sign up.',
+                            'HELLO,',
                             style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          Text(
+                            user?.phoneNumber ?? 'Valued Customer',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primary,
-                        elevation: 0,
-                        minimumSize: const Size(80, 44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () => authProvider.signOut(),
                       ),
-                      child: const Text('Invite'),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Need something\ndelivered today?',
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    text: 'Send a Parcel',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
+                      );
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 100), // Space for bottom nav
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Live Deliveries Stream
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Recent Deliveries',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('See All', style: TextStyle(color: AppColors.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  StreamBuilder<List<Delivery>>(
+                    stream: deliveryService.getCustomerDeliveries(user?.uid ?? ''),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                      }
+
+                      final deliveries = snapshot.data ?? [];
+
+                      if (deliveries.isEmpty) {
+                        return _buildEmptyState();
+                      }
+
+                      return Column(
+                        children: deliveries.map((d) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildDeliveryCard(d),
+                        )).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -288,267 +147,95 @@ class CustomerHomeScreen extends StatelessWidget {
           );
         },
         backgroundColor: AppColors.primary,
-        elevation: 10,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 32),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildNotificationIcon() {
-    return Stack(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: AppColors.subtleShadow,
-          ),
-          child: const Icon(Icons.notifications_outlined, size: 24),
-        ),
-        Positioned(
-          right: 2,
-          top: 2,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, Color bgColor, IconData icon, Color iconColor) {
+  Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(40),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppColors.subtleShadow,
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
+          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.textTertiary.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          const Text('No deliveries yet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('Create your first delivery above!', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         ],
       ),
     );
   }
 
-  Widget _buildActiveDeliveryCard() {
+  Widget _buildDeliveryCard(Delivery d) {
+    Color statusColor;
+    IconData statusIcon;
+
+    switch (d.status) {
+      case 'pending':
+        statusColor = Colors.orange;
+        statusIcon = Icons.timer_outlined;
+        break;
+      case 'accepted':
+        statusColor = Colors.blue;
+        statusIcon = Icons.check_circle_outline;
+        break;
+      case 'picked':
+        statusColor = Colors.purple;
+        statusIcon = Icons.moped;
+        break;
+      case 'completed':
+        statusColor = Colors.green;
+        statusIcon = Icons.verified;
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.help_outline;
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppColors.subtleShadow,
-        border: const Border(
-          left: BorderSide(color: AppColors.primary, width: 6),
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF9F2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.inventory_2, color: AppColors.primary),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(statusIcon, color: statusColor, size: 20),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Electronics to Osu',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    Text(
-                      'ID: ZG-9982 • 2.4km',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ],
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(d.status.toUpperCase(), style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1)),
+                  Text(d.packageType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
               ),
-              StatusBadge(label: 'IN TRANSIT', color: AppColors.inProgress, icon: Icons.sensors),
+              const Spacer(),
+              Text('ETB ${d.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
             ],
           ),
           const Divider(height: 32),
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=yaw'),
-              ),
-              const SizedBox(width: 12),
-              const Text('Yaw Boateng', style: TextStyle(fontWeight: FontWeight.w600)),
-              const Spacer(),
-              Text(
-                'Arriving in 8 mins',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textTertiary),
+              const SizedBox(width: 8),
+              Expanded(child: Text('${d.pickupZoneName} → ${d.dropZoneName}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12))),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHistoryCard(
-    String title,
-    String subtitle,
-    String route,
-    String price,
-    Color statusColor,
-    String statusLabel,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppColors.subtleShadow,
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              StatusBadge(
-                label: statusLabel,
-                color: statusColor,
-                icon: statusLabel == 'DELIVERED' ? Icons.check_circle : Icons.cancel,
-              ),
-            ],
-          ),
-          if (route.isNotEmpty) ...[
-            const Divider(height: 32),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 14, color: AppColors.textTertiary),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    route,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                ),
-                Text(
-                  price,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return BottomAppBar(
-      height: 80,
-      shadowColor: Colors.black,
-      elevation: 20,
-      notchMargin: 10,
-      shape: const CircularNotchedRectangle(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home, 'Home', true),
-          _buildNavItem(Icons.local_shipping_outlined, 'Trips', false),
-          const SizedBox(width: 40), // Space for FAB
-          _buildNavItem(Icons.account_balance_wallet_outlined, 'Wallet', false),
-          _buildNavItem(Icons.person_outline, 'Account', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? AppColors.primary : AppColors.textTertiary,
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            color: isActive ? AppColors.primary : AppColors.textTertiary,
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }

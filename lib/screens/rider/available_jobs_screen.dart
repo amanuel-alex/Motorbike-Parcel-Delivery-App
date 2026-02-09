@@ -4,12 +4,15 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import 'job_details_screen.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/services/delivery_service.dart';
+import '../../core/models/delivery_model.dart';
 
 class AvailableJobsScreen extends StatelessWidget {
   const AvailableJobsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final deliveryService = DeliveryService();
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -61,9 +64,9 @@ class AvailableJobsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildJobsList(context),
-            _buildJobsList(context),
-            _buildJobsList(context),
+            _buildJobsList(context, deliveryService),
+            _buildJobsList(context, deliveryService),
+            _buildJobsList(context, deliveryService),
           ],
         ),
         bottomNavigationBar: _buildRiderBottomNav(),
@@ -71,53 +74,76 @@ class AvailableJobsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildJobsList(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        _buildJobCard(
-          context,
-          pickup: 'Downtown Hub - Warehouse B',
-          dropoff: '452 Oak Avenue, Penthouse 4',
-          price: '\$14.50',
-          distance: '5.2 km',
-          time: '15 min',
-          showMap: true,
-        ),
-        const SizedBox(height: 20),
-        _buildJobCard(
-          context,
-          pickup: 'Sushi Zen - Midtown',
-          dropoff: 'Westside Residences',
-          price: '\$9.25',
-          distance: '2.8 km',
-          time: '8 min',
-        ),
-        const SizedBox(height: 20),
-        _buildJobCard(
-          context,
-          pickup: 'The Wine Shop - Hillside',
-          dropoff: 'North Point Estates',
-          price: '\$22.80',
-          distance: '11.4 km',
-          time: '24 min',
-          isHighDemand: true,
-        ),
-        const SizedBox(height: 20),
-        _buildJobCard(
-          context,
-          pickup: 'Green Grocery Express',
-          dropoff: 'South Station Plaza',
-          price: '\$10.00',
-          distance: '4.1 km',
-          time: '12 min',
-        ),
-      ],
+  Widget _buildJobsList(BuildContext context, DeliveryService deliveryService) {
+    return StreamBuilder<List<Delivery>>(
+      stream: deliveryService.getPendingDeliveries(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        final jobs = snapshot.data ?? [];
+
+        if (jobs.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(20),
+          itemCount: jobs.length,
+          itemBuilder: (context, index) {
+            final job = jobs[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _buildJobCard(
+                context,
+                id: job.id,
+                pickup: job.pickupAddress,
+                dropoff: job.dropoffAddress,
+                price: 'ETB ${job.price.toStringAsFixed(0)}',
+                distance: 'Nearby', // Mocked distance
+                time: 'Now',
+                showMap: index == 0,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.moped_outlined, size: 80, color: AppColors.textTertiary.withOpacity(0.2)),
+          const SizedBox(height: 24),
+          const Text(
+            'No available jobs right now',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'New delivery requests will appear here.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildJobCard(
     BuildContext context, {
+    required String id,
     required String pickup,
     required String dropoff,
     required String price,
@@ -224,7 +250,7 @@ class AvailableJobsScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const JobDetailsScreen()),
+                      MaterialPageRoute(builder: (context) => JobDetailsScreen(deliveryId: id)),
                     );
                   },
                   icon: Icons.bolt,

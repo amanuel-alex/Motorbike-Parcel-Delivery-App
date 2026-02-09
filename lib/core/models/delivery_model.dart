@@ -6,10 +6,22 @@ class Delivery {
   final String? riderId;
   final String pickupAddress;
   final String dropoffAddress;
-  final String status; // pending, finding_rider, in_transit, delivered, canceled
+  final String status; // pending -> accepted -> picked -> completed
   final double price;
   final String packageType;
   final DateTime createdAt;
+
+  // Denormalized Fields (Pro Moves)
+  final String? pickupZoneName;
+  final String? dropZoneName;
+  final String? customerPhone;
+  final String? riderPhone;
+
+  // Photo & Proof Fields
+  final String? pickupPhotoUrl;
+  final String? dropoffPhotoUrl;
+  final DateTime? pickupUploadedAt;
+  final DateTime? dropUploadedAt;
 
   Delivery({
     required this.id,
@@ -21,10 +33,18 @@ class Delivery {
     required this.price,
     required this.packageType,
     required this.createdAt,
+    this.pickupZoneName,
+    this.dropZoneName,
+    this.customerPhone,
+    this.riderPhone,
+    this.pickupPhotoUrl,
+    this.dropoffPhotoUrl,
+    this.pickupUploadedAt,
+    this.dropUploadedAt,
   });
 
   factory Delivery.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Delivery(
       id: doc.id,
       customerId: data['customerId'] ?? '',
@@ -34,7 +54,15 @@ class Delivery {
       status: data['status'] ?? 'pending',
       price: (data['price'] ?? 0).toDouble(),
       packageType: data['packageType'] ?? 'Document',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      pickupZoneName: data['pickupZoneName'],
+      dropZoneName: data['dropZoneName'],
+      customerPhone: data['customerPhone'],
+      riderPhone: data['riderPhone'],
+      pickupPhotoUrl: data['pickupPhotoUrl'],
+      dropoffPhotoUrl: data['dropoffPhotoUrl'],
+      pickupUploadedAt: (data['pickupUploadedAt'] as Timestamp?)?.toDate(),
+      dropUploadedAt: (data['dropUploadedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -48,6 +76,14 @@ class Delivery {
       'price': price,
       'packageType': packageType,
       'createdAt': FieldValue.serverTimestamp(),
+      'pickupZoneName': pickupZoneName,
+      'dropZoneName': dropZoneName,
+      'customerPhone': customerPhone,
+      'riderPhone': riderPhone,
+      'pickupPhotoUrl': pickupPhotoUrl,
+      'dropoffPhotoUrl': dropoffPhotoUrl,
+      'pickupUploadedAt': pickupUploadedAt != null ? Timestamp.fromDate(pickupUploadedAt!) : null,
+      'dropUploadedAt': dropUploadedAt != null ? Timestamp.fromDate(dropUploadedAt!) : null,
     };
   }
 }

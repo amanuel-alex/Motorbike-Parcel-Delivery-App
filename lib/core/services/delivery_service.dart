@@ -4,7 +4,7 @@ import '../models/delivery_model.dart';
 class DeliveryService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Create a new delivery request
+  // Create a new delivery request (Denormalized)
   Future<void> createDelivery(Delivery delivery) async {
     await _firestore.collection('deliveries').add(delivery.toMap());
   }
@@ -20,18 +20,53 @@ class DeliveryService {
             snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
   }
 
-  // Accept a job
-  Future<void> acceptJob(String deliveryId, String riderId) async {
-    await _firestore.collection('deliveries').doc(deliveryId).update({
-      'riderId': riderId,
-      'status': 'finding_rider', // Or 'accepted'
+  // Get My Deliveries for Customer
+  Stream<List<Delivery>> getCustomerDeliveries(String customerId) {
+    return _firestore
+        .collection('deliveries')
+        .where('customerId', isEqualTo: customerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
+  }
+
+  // Rider Job Concurrency Protection (Transaction)
+  Future<bool> acceptJob(String deliveryId, String riderId, String riderPhone) async {
+    return await _firestore.runTransaction((transaction) async {
+      DocumentReference postRef = _firestore.collection('deliveries').doc(deliveryId);
+      DocumentSnapshot snapshot = await transaction.get(postRef);
+
+      if (!snapshot.exists) return false;
+
+      String currentStatus = snapshot.get('status');
+      if (currentStatus != 'pending') return false;
+
+      transaction.update(postRef, {
+        'riderId': riderId,
+        'riderPhone': riderPhone,
+        'status': 'accepted',
+        'acceptedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
     });
   }
 
-  // Update status (Pickup, Delivery)
-  Future<void> updateDeliveryStatus(String deliveryId, String status) async {
+  // Professional Status Machine: Confirm Pickup
+  Future<void> confirmPickup(String deliveryId, String photoUrl) async {
     await _firestore.collection('deliveries').doc(deliveryId).update({
-      'status': status,
+      'status': 'picked',
+      'pickupPhotoUrl': photoUrl,
+      'pickupUploadedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Professional Status Machine: Mark as Completed
+  Future<void> confirmDelivery(String deliveryId, String photoUrl) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'status': 'completed',
+      'dropoffPhotoUrl': photoUrl,
+      'dropUploadedAt': FieldValue.serverTimestamp(),
     });
   }
 }

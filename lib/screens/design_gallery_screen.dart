@@ -86,7 +86,7 @@ class DesignGalleryScreen extends StatelessWidget {
             _buildItem(
               context,
               'Job Details (Acceptance)',
-              const JobDetailsScreen(),
+              const JobDetailsScreen(deliveryId: 'MOCK-123'),
               Icons.info_outline,
             ),
             _buildItem(
@@ -104,13 +104,13 @@ class DesignGalleryScreen extends StatelessWidget {
             _buildItem(
               context,
               'Confirm Pickup',
-              const ConfirmPickupScreen(),
+              const ConfirmPickupScreen(orderId: 'MOCK-123', customerName: 'John Doe'),
               Icons.inventory,
             ),
             _buildItem(
               context,
               'Confirm Delivery (Proof)',
-              const ConfirmDeliveryScreen(),
+              const ConfirmDeliveryScreen(orderId: 'MOCK-123', customerName: 'John Doe'),
               Icons.camera_alt,
             ),
           ]),
