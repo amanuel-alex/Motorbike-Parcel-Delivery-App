@@ -48,7 +48,7 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                   children: [
                     _buildLocationItem(
                       label: 'PICK UP FROM',
-                      value: '72 Lagos Island, Marina',
+                      value: 'Bole, Addis Ababa',
                       icon: Icons.radio_button_checked,
                       iconColor: AppColors.primary,
                       showTrailing: true,

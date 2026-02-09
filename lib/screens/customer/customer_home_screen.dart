@@ -161,7 +161,7 @@ class CustomerHomeScreen extends StatelessWidget {
                   Expanded(
                     child: _buildStatCard(
                       'BALANCE',
-                      '₵240.50',
+                      'ETB 240.50',
                       const Color(0xFFEDFBF5),
                       Icons.account_balance_wallet,
                       const Color(0xFF00D084),
