@@ -243,7 +243,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         ),
         child: CustomButton(
           text: 'I Have Paid',
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
           icon: Icons.check_circle,
         ),
       ),

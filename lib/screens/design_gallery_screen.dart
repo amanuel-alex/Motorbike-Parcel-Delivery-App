@@ -37,7 +37,10 @@ class DesignGalleryScreen extends StatelessWidget {
             _buildItem(
               context,
               'OTP Verification',
-              const OtpVerificationScreen(),
+              const OtpVerificationScreen(
+                verificationId: 'mock-id',
+                phoneNumber: '+234 812 345 6789',
+              ),
               Icons.password,
             ),
             _buildItem(

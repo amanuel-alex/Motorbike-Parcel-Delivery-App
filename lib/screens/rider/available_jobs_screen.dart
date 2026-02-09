@@ -1,10 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
-import 'confirm_delivery_screen.dart';
-import 'earnings_dashboard_screen.dart';
-import 'available_jobs_screen.dart';
-import 'confirm_pickup_screen.dart';
 import 'job_details_screen.dart';
 import '../../providers/auth_provider.dart';
 

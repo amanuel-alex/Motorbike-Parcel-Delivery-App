@@ -33,6 +33,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       await _authService.signInWithOtp(widget.verificationId, otp);
       // AuthWrapper will automatically switch to the next screen because of authStateChanges
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid code: $e')),
