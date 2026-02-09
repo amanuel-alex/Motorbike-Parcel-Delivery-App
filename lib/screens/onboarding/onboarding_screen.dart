@@ -18,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingData> _pages = [
     OnboardingData(
-      title: 'Fastest Delivery in\nWest Africa',
+      title: 'Fastest Delivery in\nEast Africa',
       description: 'Get your parcels delivered instantly across city zones with our high-speed motorbike network.',
       icon: Icons.bolt,
       color: const Color(0xFF1E293B),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:country_picker/country_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/services/auth_service.dart';
@@ -15,6 +16,19 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  
+  Country _selectedCountry = Country(
+    phoneCode: "251",
+    countryCode: "ET",
+    e164Sc: 0,
+    geographic: true,
+    level: 1,
+    name: "Ethiopia",
+    example: "911234567",
+    displayName: "Ethiopia (ET) [+251]",
+    displayNameNoCountryCode: "Ethiopia (ET)",
+    e164Key: "251-ET-0",
+  );
 
   void _sendOtp() async {
     final phone = _phoneController.text.trim();
@@ -22,8 +36,8 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Formatted phone: +234 + input
-    final fullPhone = '+234$phone';
+    // Formatted phone: Dynamic prefix + input
+    final fullPhone = '+${_selectedCountry.phoneCode}$phone';
 
     await _authService.verifyPhone(
       phoneNumber: fullPhone,
@@ -127,7 +141,7 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'FASTEST IN WEST AFRICA',
+                              'FASTEST IN EAST AFRICA',
                               style: TextStyle(
                                 color: AppColors.primary,
                                 fontSize: 12,
@@ -178,27 +192,53 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: const [
-                        Text('🇳🇬', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 8),
-                        Text(
-                          '+234',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                  GestureDetector(
+                    onTap: () {
+                      showCountryPicker(
+                        context: context,
+                        showPhoneCode: true,
+                        onSelect: (Country country) {
+                          setState(() {
+                            _selectedCountry = country;
+                          });
+                        },
+                        countryListTheme: CountryListThemeData(
+                          borderRadius: BorderRadius.circular(24),
+                          inputDecoration: InputDecoration(
+                            hintText: 'Search country',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
-                        Icon(Icons.keyboard_arrow_down, size: 20),
-                      ],
+                      );
+                    },
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            _selectedCountry.flagEmoji,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+${_selectedCountry.phoneCode}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const Icon(Icons.keyboard_arrow_down, size: 20),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -207,7 +247,9 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: InputDecoration(
-                        hintText: '000 000 000',
+                        hintText: _selectedCountry.example.isEmpty 
+                            ? '000 000 000' 
+                            : _selectedCountry.example,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
