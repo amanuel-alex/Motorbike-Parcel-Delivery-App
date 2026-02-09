@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth_wrapper.dart';
-import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/splash/splash_screen.dart';
 import 'screens/design_gallery_screen.dart';
 import 'firebase_options.dart';
 
@@ -16,22 +16,18 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  final prefs = await SharedPreferences.getInstance();
-  final showOnboarding = prefs.getBool('showOnboarding') ?? true;
-
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
-      child: MyApp(showOnboarding: showOnboarding),
+      child: const MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final bool showOnboarding;
-  const MyApp({super.key, required this.showOnboarding});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +35,7 @@ class MyApp extends StatelessWidget {
       title: 'Zipp&Go',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // Start with Onboarding if first time, else AuthWrapper
-      home: showOnboarding ? const OnboardingScreen() : const AuthWrapper(), 
+      home: const SplashScreen(), 
       routes: {
         '/gallery': (context) => const DesignGalleryScreen(),
         '/auth': (context) => const AuthWrapper(),

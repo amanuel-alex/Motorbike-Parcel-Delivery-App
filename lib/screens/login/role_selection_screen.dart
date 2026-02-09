@@ -16,7 +16,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   void _handleContinue() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.setRole(selectedRole);
+    // Professional Tip: Pass phone number to bootstrapping logic
+    await authProvider.setRole(selectedRole, phoneNumber: authProvider.user?.phoneNumber);
     // AuthWrapper will handle navigation
   }
 

@@ -48,11 +48,27 @@ class AuthService {
     return null;
   }
 
-  // Set user role
-  Future<void> setUserRole(String uid, String role) async {
+  // Set user role and initial profile
+  Future<void> setUserRole(String uid, String role, {String? phoneNumber}) async {
     await _firestore.collection('users').doc(uid).set({
       'role': role,
-      'updatedAt': FieldValue.serverTimestamp(),
+      'phoneNumber': phoneNumber,
+      'createdAt': FieldValue.serverTimestamp(),
+      'lastLoginAt': FieldValue.serverTimestamp(),
+      'status': 'active',
     }, SetOptions(merge: true));
+  }
+
+  // Update last login metadata
+  Future<void> updateMetadata(String uid) async {
+    await _firestore.collection('users').doc(uid).update({
+      'lastLoginAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Check if user has a profile
+  Future<bool> userExists(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    return doc.exists;
   }
 }
