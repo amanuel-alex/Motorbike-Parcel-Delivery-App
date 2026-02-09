@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import 'earnings_dashboard_screen.dart';
 
 class ConfirmDeliveryScreen extends StatelessWidget {
   const ConfirmDeliveryScreen({super.key});
@@ -181,7 +182,12 @@ class ConfirmDeliveryScreen extends StatelessWidget {
               
               CustomButton(
                 text: 'Mark as Completed',
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EarningsDashboardScreen()),
+                  );
+                },
                 icon: Icons.check_circle_outline,
               ),
               const SizedBox(height: 12),

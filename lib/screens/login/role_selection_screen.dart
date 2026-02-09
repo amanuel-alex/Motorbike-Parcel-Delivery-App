@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../providers/auth_provider.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -12,17 +14,27 @@ class RoleSelectionScreen extends StatefulWidget {
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   String selectedRole = 'customer';
 
+  void _handleContinue() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.setRole(selectedRole);
+    // AuthWrapper will handle navigation
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLoading = Provider.of<AuthProvider>(context).isLoading;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+            onPressed: () => Provider.of<AuthProvider>(context, listen: false).signOut(),
+          ),
+        ],
         title: const Text(
           'Role Selection',
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
@@ -69,12 +81,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             ),
             
             const Spacer(),
-            CustomButton(
-              text: 'Continue',
-              onPressed: () {},
-            ),
+            isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : CustomButton(
+                  text: 'Continue',
+                  onPressed: _handleContinue,
+                ),
             const SizedBox(height: 20),
-             Text(
+            Text(
               'By continuing, you agree to our Terms of Service and Privacy Policy.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -118,7 +132,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             Center(
               child: Column(
                 children: [
-                  Container(
+                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: isSelected ? const Color(0xFFFFF9F2) : const Color(0xFFF8FAFC),

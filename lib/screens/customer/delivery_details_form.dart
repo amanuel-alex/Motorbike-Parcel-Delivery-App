@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../payment/payment_instructions_screen.dart';
 
 class DeliveryDetailsForm extends StatelessWidget {
   const DeliveryDetailsForm({super.key});
@@ -156,7 +157,12 @@ class DeliveryDetailsForm extends StatelessWidget {
             const Spacer(),
             CustomButton(
               text: 'Continue to Payment',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PaymentInstructionsScreen()),
+                );
+              },
               icon: Icons.arrow_forward,
             ),
           ],

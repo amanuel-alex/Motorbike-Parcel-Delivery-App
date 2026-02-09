@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../providers/auth_provider.dart';
+import 'create_delivery_screen.dart'; // Added this import
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -51,7 +54,16 @@ class CustomerHomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  _buildNotificationIcon(),
+                  Row(
+                    children: [
+                      _buildNotificationIcon(),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        onPressed: () => Provider.of<AuthProvider>(context, listen: false).signOut(),
+                        icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -114,7 +126,12 @@ class CustomerHomeScreen extends StatelessWidget {
                     SizedBox(
                       width: 180,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -263,7 +280,12 @@ class CustomerHomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: _buildBottomNav(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
+          );
+        },
         backgroundColor: AppColors.primary,
         elevation: 10,
         shape: const CircleBorder(),

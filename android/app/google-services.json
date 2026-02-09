@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "428648053308",
+    "project_id": "zippandgo-37ae8",
+    "storage_bucket": "zippandgo-37ae8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428648053308:android:fadac0ef9093a45b64a139",
+        "android_client_info": {
+          "package_name": "com.example.motorbike_parcel_delivery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbTESr6Sl_N9kzFbNIduqoO-pZIVT2OTY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import 'confirm_pickup_screen.dart';
 
 class JobDetailsScreen extends StatelessWidget {
   const JobDetailsScreen({super.key});
@@ -203,7 +204,12 @@ class JobDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 48),
                   CustomButton(
                     text: 'Accept Job',
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ConfirmPickupScreen(orderId: 'ZG-8812', customerName: 'Johnathan D.')),
+                      );
+                    },
                     icon: Icons.check_circle_outline,
                   ),
                   const SizedBox(height: 12),

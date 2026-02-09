@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import 'delivery_details_form.dart';
 
 class CreateDeliveryScreen extends StatefulWidget {
   const CreateDeliveryScreen({super.key});
@@ -230,7 +231,12 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
             const SizedBox(height: 24),
             CustomButton(
               text: 'Confirm & Request Bike',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DeliveryDetailsForm()),
+                );
+              },
               icon: Icons.bolt,
             ),
           ],

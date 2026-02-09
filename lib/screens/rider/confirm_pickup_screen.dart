@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 
+import 'confirm_delivery_screen.dart';
+
 class ConfirmPickupScreen extends StatelessWidget {
-  const ConfirmPickupScreen({super.key});
+  final String? orderId;
+  final String? customerName;
+
+  const ConfirmPickupScreen({super.key, this.orderId, this.customerName});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,7 @@ class ConfirmPickupScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 10, color: AppColors.textTertiary, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        '#ZG-88214-X',
+                        orderId ?? '#ZG-88214-X',
                         style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ],
@@ -150,7 +155,12 @@ class ConfirmPickupScreen extends StatelessWidget {
                   
                   CustomButton(
                     text: 'Confirm Pickup',
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ConfirmDeliveryScreen()),
+                      );
+                    },
                     icon: Icons.check_circle_outline,
                     // Disabled state simulation if needed, but for UI demo we leave it active
                   ),

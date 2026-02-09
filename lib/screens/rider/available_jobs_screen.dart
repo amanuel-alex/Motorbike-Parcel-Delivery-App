@@ -1,6 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import 'confirm_delivery_screen.dart';
+import 'earnings_dashboard_screen.dart';
+import 'available_jobs_screen.dart';
+import 'confirm_pickup_screen.dart';
+import 'job_details_screen.dart';
+import '../../providers/auth_provider.dart';
 
 class AvailableJobsScreen extends StatelessWidget {
   const AvailableJobsScreen({super.key});
@@ -29,13 +35,17 @@ class AvailableJobsScreen extends StatelessWidget {
           centerTitle: false,
           actions: [
             Container(
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.refresh, color: AppColors.textPrimary, size: 20),
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+              onPressed: () => Provider.of<AuthProvider>(context, listen: false).signOut(),
             ),
           ],
           bottom: TabBar(
@@ -214,7 +224,12 @@ class AvailableJobsScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 CustomButton(
                   text: 'ACCEPT JOB',
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const JobDetailsScreen()),
+                    );
+                  },
                   icon: Icons.bolt,
                 ),
               ],
