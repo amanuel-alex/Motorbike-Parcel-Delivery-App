@@ -41,6 +41,12 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           leading: const SizedBox.shrink(),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.black),
+              onPressed: () => showLogoutDialog(context),
+            ),
+          ],
           bottom: const TabBar(
              labelColor: AppColors.primary,
              unselectedLabelColor: Colors.grey,

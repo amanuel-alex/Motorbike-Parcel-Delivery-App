@@ -44,6 +44,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     AuthService.isDemoMode = false;
     await _authService.signOut();
+    notifyListeners();
   }
 
   void triggerDemoMode({String? phoneNumber}) {

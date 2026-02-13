@@ -194,7 +194,7 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
           _buildProfileOption(
             Icons.logout, 
             'Logout', 
-            () => authProvider.signOut(),
+            () => showLogoutDialog(context),
             color: Colors.red,
           ),
         ],

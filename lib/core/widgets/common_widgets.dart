@@ -107,14 +107,14 @@ class StatusBadge extends StatelessWidget {
 Future<void> showLogoutDialog(BuildContext context) async {
   return showDialog(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (dialContext) => AlertDialog(
       title: const Text("Logout"),
       content: const Text("Are you sure you want to logout?"),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+        TextButton(onPressed: () => Navigator.pop(dialContext), child: const Text("Cancel")),
         TextButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(dialContext);
             Provider.of<AuthProvider>(context, listen: false).signOut();
           },
           child: const Text("Logout", style: TextStyle(color: Colors.red)),

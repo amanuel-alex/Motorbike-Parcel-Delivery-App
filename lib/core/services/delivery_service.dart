@@ -44,14 +44,7 @@ class DeliveryService {
     });
   }
 
-  // Create a new delivery request (Denormalized)
   Future<String> createDelivery(Delivery delivery) async {
-    // Demo Mode: Simulate success for presentations if network is unstable
-    if (AuthService.isDemoMode) {
-      await Future.delayed(const Duration(seconds: 1));
-      return 'demo_id_${DateTime.now().millisecondsSinceEpoch}';
-    }
-
     final Map<String, dynamic> data = delivery.toMap();
     // Logic: Set expected time to 30 mins from now (Mock)
     data['expectedDeliveryTime'] = Timestamp.fromDate(DateTime.now().add(const Duration(minutes: 30)));
@@ -217,10 +210,9 @@ class DeliveryService {
         .map((doc) => Delivery.fromFirestore(doc));
   }
 
-  // Get All Deliveries for Admin
+  // Get All Deliveries for Admin (Simplified query for visibility)
   Stream<List<Delivery>> getAllDeliveries() {
     return _firestore.collection('deliveries')
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());

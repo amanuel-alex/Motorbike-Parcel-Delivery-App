@@ -8,6 +8,7 @@ import '../../core/utils/error_handler.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../payment/payment_instructions_screen.dart';
+import '../../core/services/auth_service.dart';
 
 class CreateDeliveryScreen extends StatefulWidget {
   const CreateDeliveryScreen({super.key});
@@ -18,6 +19,7 @@ class CreateDeliveryScreen extends StatefulWidget {
 
 class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
   final DeliveryService _deliveryService = DeliveryService();
+  final AuthService _authService = AuthService();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _pickupDetailController = TextEditingController();
   final TextEditingController _dropDetailController = TextEditingController();
@@ -136,8 +138,8 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
 
       final delivery = Delivery(
         id: '',
-        customerId: authProvider.user?.uid ?? 'anonymous',
-        customerPhone: authProvider.user?.phoneNumber ?? 'N/A',
+        customerId: _authService.currentUserUid,
+        customerPhone: authProvider.user?.phoneNumber ?? 'Demo User',
         pickupAddress: pickupFull,
         dropoffAddress: dropFull,
         pickupZoneName: selectedPickupZone,

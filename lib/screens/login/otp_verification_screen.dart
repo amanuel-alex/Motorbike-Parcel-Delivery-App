@@ -33,13 +33,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       if (otp == "888888" || otp == "123456") {
-        setState(() => _isLoading = false);
+        final cred = await _authService.signInWithOtp(widget.verificationId, otp);
+        final String uid = cred?.user?.uid ?? _authService.currentUserUid;
+        
+        String demoRole = 'customer';
+        if (widget.phoneNumber.contains('999')) demoRole = 'admin';
+        else if (widget.phoneNumber.contains('000')) demoRole = 'rider';
+        
+        await _authService.setUserRole(uid, demoRole, phoneNumber: widget.phoneNumber);
+        
+        if (!mounted) return;
         Provider.of<AuthProvider>(context, listen: false).triggerDemoMode(
           phoneNumber: widget.phoneNumber,
         );
         
-        // Professional Navigation: Clear stack and go to wrapper
-        if (!mounted) return;
         Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
         return;
       }

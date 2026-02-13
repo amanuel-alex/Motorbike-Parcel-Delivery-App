@@ -29,13 +29,25 @@ class AdminDeliveryListScreen extends StatelessWidget {
       body: StreamBuilder<List<Delivery>>(
         stream: DeliveryService().getAllDeliveries(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+             return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           final deliveries = snapshot.data ?? [];
           
           if (deliveries.isEmpty) {
-            return const Center(child: Text("No deliveries found"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.inbox, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text("No active deliveries found", style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            );
           }
 
           return ListView.separated(

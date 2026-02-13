@@ -30,10 +30,14 @@ class AuthService {
 
   // Verify OTP
   Future<UserCredential?> signInWithOtp(String verificationId, String smsCode) async {
-    // Presentation Bypass
-    if (smsCode == "888888") {
+    // Presentation Bypass: Attempt Anonymous Auth for real persistence, fallback to mock if restricted
+    if (smsCode == "888888" || smsCode == "123456") {
       isDemoMode = true;
-      return null; 
+      try {
+        return await _auth.signInAnonymously();
+      } catch (e) {
+        return null; // Fallback: Proceed in Demo Mode without a real Firebase User
+      }
     }
 
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
@@ -50,8 +54,6 @@ class AuthService {
 
   // Get user role
   Future<String?> getUserRole(String uid) async {
-    if (isDemoMode) return 'customer'; 
-
     DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
       return (doc.data() as Map<String, dynamic>)['role'];
@@ -92,5 +94,10 @@ class AuthService {
         return data;
       }).toList();
     });
+  }
+  // Helper for consistent IDs across Real and Demo modes
+  String get currentUserUid {
+    if (_auth.currentUser != null) return _auth.currentUser!.uid;
+    return isDemoMode ? 'demo_guest_id' : 'unknown_user';
   }
 }
