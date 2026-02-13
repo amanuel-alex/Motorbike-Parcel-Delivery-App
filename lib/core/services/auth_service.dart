@@ -82,4 +82,15 @@ class AuthService {
     final doc = await _firestore.collection('users').doc(uid).get();
     return doc.exists;
   }
+
+  // Get All Users (Admin)
+  Stream<List<Map<String, dynamic>>> getAllUsers() {
+    return _firestore.collection('users').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['uid'] = doc.id;
+        return data;
+      }).toList();
+    });
+  }
 }

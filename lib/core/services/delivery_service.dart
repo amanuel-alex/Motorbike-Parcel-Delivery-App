@@ -171,6 +171,15 @@ class DeliveryService {
     });
   }
 
+  // Get All Deliveries for Admin
+  Stream<List<Delivery>> getAllDeliveries() {
+    return _firestore.collection('deliveries')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
+  }
+
   // Cancel Delivery (Customer/Admin)
   Future<void> cancelDelivery(String deliveryId) async {
     await _firestore.collection('deliveries').doc(deliveryId).update({

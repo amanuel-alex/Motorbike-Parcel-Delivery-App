@@ -3,6 +3,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/models/delivery_model.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+
 
 class DeliveryDetailsScreen extends StatelessWidget {
   final Delivery delivery;
@@ -11,6 +14,9 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<AuthProvider>(context).userRole;
+    final isPendingPayment = delivery.paymentStatus == 'pending';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
@@ -122,7 +128,50 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 48),
                   
-                  if (delivery.status == 'pending')
+                  if (userRole == 'admin') ...[
+                     const SizedBox(height: 32),
+                     _buildSectionTitle('Admin Controls'),
+                     const SizedBox(height: 16),
+                     if (isPendingPayment) ...[
+                       Row(
+                         children: [
+                           Expanded(
+                             child: CustomButton(
+                               text: 'Approve Payment',
+                               backgroundColor: Colors.green,
+                               textColor: Colors.white,
+                               onPressed: () async {
+                                 await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
+                                 if (context.mounted) Navigator.pop(context);
+                               },
+                             ),
+                           ),
+                           const SizedBox(width: 16),
+                           Expanded(
+                             child: CustomButton(
+                               text: 'Reject Payment',
+                               backgroundColor: Colors.red,
+                               textColor: Colors.white,
+                               onPressed: () async {
+                                 await DeliveryService().updatePaymentStatus(delivery.id, 'canceled'); // or rejected
+                                 if (context.mounted) Navigator.pop(context);
+                               },
+                             ),
+                           ),
+                         ],
+                       ),
+                       const SizedBox(height: 16),
+                     ],
+                     CustomButton(
+                        text: 'Force Cancel Order',
+                        onPressed: () async {
+                          await DeliveryService().cancelDelivery(delivery.id);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        backgroundColor: Colors.red.withOpacity(0.1),
+                        textColor: Colors.red,
+                      ),
+                  ] else if (delivery.status == 'pending')
                     CustomButton(
                       text: 'Cancel Order',
                       onPressed: () async {

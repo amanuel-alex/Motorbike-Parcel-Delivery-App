@@ -48,8 +48,11 @@ class AuthProvider extends ChangeNotifier {
 
   void triggerDemoMode({String? phoneNumber}) {
     AuthService.isDemoMode = true;
-    // Boss Hack: If phone contains 000, login as Rider. Otherwise, Customer.
-    if (phoneNumber != null && phoneNumber.contains('000')) {
+    // Boss Hack: If phone contains 999, login as Admin.
+    // If phone contains 000, login as Rider. Otherwise, Customer.
+    if (phoneNumber != null && phoneNumber.contains('999')) {
+      _userRole = 'admin';
+    } else if (phoneNumber != null && phoneNumber.contains('000')) {
       _userRole = 'rider';
     } else {
       _userRole = 'customer';

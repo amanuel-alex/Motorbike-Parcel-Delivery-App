@@ -5,7 +5,9 @@ import '../screens/login/phone_number_login_screen.dart';
 import '../screens/login/role_selection_screen.dart';
 import '../screens/customer/customer_home_screen.dart';
 import '../screens/rider/available_jobs_screen.dart';
+import '../screens/admin/admin_dashboard.dart';
 import '../core/services/auth_service.dart';
+
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -27,8 +29,13 @@ class AuthWrapper extends StatelessWidget {
     // 3. Route to specific home based on role
     if (authProvider.userRole == 'customer') {
       return const CustomerHomeScreen();
-    } else {
+    } else if (authProvider.userRole == 'rider') {
       return const AvailableJobsScreen();
+    } else if (authProvider.userRole == 'admin') {
+      return const AdminDashboardScreen();
+    } else {
+      // Fallback or Error Screen
+      return const Scaffold(body: Center(child: Text("Unknown Role")));
     }
   }
 }
