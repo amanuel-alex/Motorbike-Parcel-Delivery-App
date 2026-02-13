@@ -5,6 +5,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/constants/app_constants.dart';
 import 'order_chat_screen.dart';
 
 
@@ -426,24 +427,29 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
     final expected = delivery.expectedDeliveryTime!;
     final actual = delivery.customerConfirmedAt!;
-    final basePrice = delivery.price;
-    final diff = expected.difference(actual); // Positive if early, Negative if late
+    final totalBill = delivery.price;
     
-    double bonus = 0;
-    String note = "On Time (Exact Bill)";
-    Color noteColor = Colors.orange;
+    // Revenue Split Calculation
+    final platformCut = totalBill * AppConstants.platformCommissionRate;
+    final riderBase = totalBill * AppConstants.riderRate;
+    
+    final diff = expected.difference(actual);
+    double performanceAdjustment = 0;
+    String note = "Standard (40%)";
+    Color noteColor = AppColors.textTertiary;
 
     if (diff.inMinutes >= 5) { // Early by 5+ mins
-       bonus = basePrice * 0.10;
-       note = "Early Reward (+10%)";
+       performanceAdjustment = totalBill * 0.05; // 5% Bonus from Org to Rider
+       note = "Efficiency Bonus (+5%)";
        noteColor = Colors.green;
     } else if (diff.inMinutes < 0) { // Late
-       bonus = -(basePrice * 0.10);
-       note = "Late Penalty (-10%)";
+       performanceAdjustment = -(totalBill * 0.05); // 5% Deduction
+       note = "Delay Penalty (-5%)";
        noteColor = Colors.red;
     }
 
-    final totalPayout = basePrice + bonus;
+    final finalRiderPayout = riderBase + performanceAdjustment;
+    final platformNetProfit = platformCut - performanceAdjustment;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -456,30 +462,58 @@ class DeliveryDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Rider Payout Calculation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          _buildInfoRow("Expected Time", _formatTime(expected)),
-          const SizedBox(height: 4),
-          _buildInfoRow("Actual Time", _formatTime(actual)),
-           const SizedBox(height: 8),
-          const Divider(),
-           const SizedBox(height: 8),
-          _buildInfoRow("Base Bill", "ETB ${basePrice.toStringAsFixed(0)}"),
-          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Text("Adjustment", style: TextStyle(color: noteColor, fontWeight: FontWeight.bold)),
-               Text(note, style: TextStyle(color: noteColor, fontWeight: FontWeight.bold)),
+              const Text("Earnings Breakdown", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                child: const Text("60/40 SPLIT", style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          _buildInfoRow("Customer Paid", "ETB ${totalBill.toStringAsFixed(0)}"),
+          const SizedBox(height: 8),
+          _buildInfoRow("Org Commission (60%)", "ETB ${platformCut.toStringAsFixed(0)}", valueColor: AppColors.textSecondary),
+          _buildInfoRow("Rider Base Share (40%)", "ETB ${riderBase.toStringAsFixed(0)}", valueColor: AppColors.textSecondary),
+          const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total Payout", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-              Text("ETB ${totalPayout.toStringAsFixed(0)}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+               Text(note, style: TextStyle(color: noteColor, fontWeight: FontWeight.bold, fontSize: 13)),
+               Text("${performanceAdjustment >= 0 ? '+' : ''}ETB ${performanceAdjustment.abs().toStringAsFixed(0)}", 
+                 style: TextStyle(color: noteColor, fontWeight: FontWeight.bold)),
             ],
+          ),
+          const SizedBox(height: 16),
+          // Total Payout Row
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Org Net Profit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text("ETB ${platformNetProfit.toStringAsFixed(0)}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.blueGrey)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Final Rider Payout", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                    Text("ETB ${finalRiderPayout.toStringAsFixed(0)}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           if (delivery.riderPaid)
@@ -487,15 +521,15 @@ class DeliveryDetailsScreen extends StatelessWidget {
                width: double.infinity,
                padding: const EdgeInsets.all(12),
                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-               child: const Center(child: Text("PAID", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, letterSpacing: 2))),
+               child: const Center(child: Text("PAID TO RIDER", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, letterSpacing: 2))),
              )
           else
             CustomButton(
               text: "Pay Rider",
               backgroundColor: AppColors.primary,
               onPressed: () async {
-                 if (await showConfirmationDialog(context, "Pay Rider", "Confirm payout of ETB ${totalPayout.toStringAsFixed(0)}?")) {
-                    await DeliveryService().payRider(delivery.id, totalPayout);
+                 if (await showConfirmationDialog(context, "Pay Rider", "Confirm payout of ETB ${finalRiderPayout.toStringAsFixed(0)}?")) {
+                    await DeliveryService().payRider(delivery.id, finalRiderPayout);
                  }
               },
             )

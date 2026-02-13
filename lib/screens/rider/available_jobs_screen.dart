@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/models/delivery_model.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/widgets/common_widgets.dart';
 import 'job_details_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/services/delivery_service.dart';
-import '../../core/models/delivery_model.dart';
 import '../../core/services/auth_service.dart';
 
 class AvailableJobsScreen extends StatefulWidget {
@@ -138,7 +139,7 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
                       id: job.id,
                       pickup: job.pickupAddress,
                       dropoff: job.dropoffAddress,
-                      price: 'ETB ${job.price.toStringAsFixed(0)}',
+                      price: 'ETB ${(job.price * AppConstants.riderRate).toStringAsFixed(0)}',
                       packageType: job.packageType,
                       createdAt: job.createdAt,
                       isHighDemand: index == 0, // Just a visual flair for the first item

@@ -10,4 +10,8 @@ class AppConstants {
   ];
 
   static const double baseSameZonePrice = 80.0;
+
+  // Revenue Sharing (Requirement: 60% System, 40% Rider)
+  static const double platformCommissionRate = 0.60;
+  static const double riderRate = 0.40;
 }

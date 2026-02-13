@@ -96,11 +96,16 @@ class EarningsDashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$1,240.50',
+                    'ETB 4,240.50',
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
                           color: AppColors.delivered,
                           fontWeight: FontWeight.w900,
                         ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Net Earnings (Your 40%)',
+                    style: TextStyle(color: AppColors.textTertiary, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 32),
                   Row(
@@ -115,7 +120,7 @@ class EarningsDashboardScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '\$840.25',
+                              'ETB 840.25',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
@@ -178,11 +183,11 @@ class EarningsDashboardScreen extends StatelessWidget {
               itemCount: 5,
               itemBuilder: (context, index) {
                 final trips = [
-                  ['Downtown → Airport', 'Today, 10:30 AM', '+\$24.00'],
-                  ['East Side → Central Mall', 'Today, 09:15 AM', '+\$18.50'],
-                  ['Union Station → West Hills', 'Oct 23, 05:45 PM', '+\$32.10'],
-                  ['Oak St → Medical Center', 'Oct 23, 02:20 PM', '+\$12.00'],
-                  ['North Gate → Tech Park', 'Oct 23, 11:05 AM', '+\$21.75'],
+                  ['Bole → Kirkos', 'Today, 10:30 AM', '+ETB 60.00'],
+                  ['Arada → Yeka', 'Today, 09:15 AM', '+ETB 52.00'],
+                  ['Piassa → Bole', 'Oct 23, 05:45 PM', '+ETB 64.00'],
+                  ['Sarbet → Mexico', 'Oct 23, 02:20 PM', '+ETB 48.00'],
+                  ['Kality → Gerji', 'Oct 23, 11:05 AM', '+ETB 72.00'],
                 ];
                 return _buildTripItem(trips[index][0], trips[index][1], trips[index][2]);
               },

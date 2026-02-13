@@ -6,6 +6,7 @@ import 'confirm_pickup_screen.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/error_handler.dart';
 
 class JobDetailsScreen extends StatefulWidget {
@@ -156,10 +157,12 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Total Earnings', style: TextStyle(color: AppColors.textSecondary)),
+                                const Text('Total Job Fee', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                Text('ETB ${delivery.price.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.textTertiary, fontSize: 14)),
                                 const SizedBox(height: 8),
+                                const Text('Your Share (40%)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                                 Text(
-                                  'ETB ${delivery.price.toStringAsFixed(0)}',
+                                  'ETB ${(delivery.price * AppConstants.riderRate).toStringAsFixed(0)}',
                                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w900,
