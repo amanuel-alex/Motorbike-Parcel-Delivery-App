@@ -167,6 +167,17 @@ class DeliveryService {
       'events': FieldValue.arrayUnion([
         {'type': 'completed', 'at': Timestamp.now()}
       ]),
+
+    });
+  }
+
+  // Cancel Delivery (Customer/Admin)
+  Future<void> cancelDelivery(String deliveryId) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'status': 'canceled',
+      'events': FieldValue.arrayUnion([
+        {'type': 'canceled', 'at': Timestamp.now()}
+      ]),
     });
   }
 }

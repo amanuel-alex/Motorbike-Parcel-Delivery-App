@@ -19,6 +19,9 @@ class CreateDeliveryScreen extends StatefulWidget {
 class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
   final DeliveryService _deliveryService = DeliveryService();
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _pickupDetailController = TextEditingController();
+  final TextEditingController _dropDetailController = TextEditingController();
+  final TextEditingController _receiverPhoneController = TextEditingController();
 
   String? selectedPickupZone;
   String? selectedDropZone;
@@ -78,17 +81,32 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
 
   Future<void> _handleCreateRequest() async {
     if (selectedPickupZone == null || selectedDropZone == null || estimatedPrice == null) return;
+    if (_pickupDetailController.text.trim().isEmpty || _dropDetailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter specific address details')),
+      );
+      return;
+    }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     setState(() => _isSubmitting = true);
 
     try {
+      final pickupFull = '${_pickupDetailController.text.trim()}, $selectedPickupZone';
+      final dropFull = '${_dropDetailController.text.trim()}, $selectedDropZone';
+      
+      // If receiver phone is provided, append to notes
+      String notes = _notesController.text.trim();
+      if (_receiverPhoneController.text.isNotEmpty) {
+        notes += '\nReceiver Phone: ${_receiverPhoneController.text.trim()}';
+      }
+
       final delivery = Delivery(
         id: '',
         customerId: authProvider.user?.uid ?? 'anonymous',
         customerPhone: authProvider.user?.phoneNumber ?? 'N/A',
-        pickupAddress: '$selectedPickupZone (Zone)',
-        dropoffAddress: '$selectedDropZone (Zone)',
+        pickupAddress: pickupFull,
+        dropoffAddress: dropFull,
         pickupZoneName: selectedPickupZone,
         dropZoneName: selectedDropZone,
         status: 'pending',
@@ -156,12 +174,12 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Zone Selection Section
-              _buildSectionTitle('Where are we going?'),
-              const SizedBox(height: 16),
+              _buildSectionTitle('Pickup Location'),
+              const SizedBox(height: 12),
               _buildZoneDropdown(
                 label: 'PICKUP ZONE',
                 value: selectedPickupZone,
-                icon: Icons.radio_button_checked,
+                icon: Icons.map,
                 iconColor: AppColors.primary,
                 onChanged: (val) {
                   setState(() => selectedPickupZone = val);
@@ -169,16 +187,30 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              _buildZoneDropdown(
+              _buildTextField(_pickupDetailController, 'Building, Street Name, Landmark...'),
+              
+              const SizedBox(height: 24),
+              
+              _buildSectionTitle('Drop-off Location'),
+              const SizedBox(height: 12),
+               _buildZoneDropdown(
                 label: 'DROP-OFF ZONE',
                 value: selectedDropZone,
-                icon: Icons.location_on,
+                icon: Icons.map,
                 iconColor: Colors.redAccent,
                 onChanged: (val) {
                   setState(() => selectedDropZone = val);
                   _calculatePrice();
                 },
               ),
+              const SizedBox(height: 12),
+              _buildTextField(_dropDetailController, 'Building, Street Name, Landmark...'),
+
+              const SizedBox(height: 24),
+
+              _buildSectionTitle('Receiver Info (Optional)'),
+              const SizedBox(height: 12),
+              _buildTextField(_receiverPhoneController, 'Receiver Phone Number', icon: Icons.phone),
               
               const SizedBox(height: 32),
               
@@ -210,6 +242,11 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                 decoration: InputDecoration(
                   hintText: 'Any special instructions for the rider...',
                   fillColor: const Color(0xFFF8FAFC),
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -261,11 +298,32 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
     );
   }
 
+  Widget _buildTextField(TextEditingController controller, String hint, {IconData? icon}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: icon != null ? Icon(icon, color: AppColors.textTertiary) : null,
+        fillColor: const Color(0xFFF8FAFC),
+        filled: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: FontWeight.w800,
         color: AppColors.textPrimary,
       ),
@@ -280,33 +338,28 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 24),
-          const SizedBox(width: 16),
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textTertiary)),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: value,
-                    isExpanded: true,
-                    hint: const Text('Select Zone', style: TextStyle(fontSize: 14)),
-                    items: _zones.map((zone) {
-                      return DropdownMenuItem(value: zone, child: Text(zone, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)));
-                    }).toList(),
-                    onChanged: onChanged,
-                  ),
-                ),
-              ],
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                isExpanded: true,
+                hint: Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textTertiary)),
+                icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
+                items: _zones.map((zone) {
+                  return DropdownMenuItem(value: zone, child: Text(zone, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)));
+                }).toList(),
+                onChanged: onChanged,
+              ),
             ),
           ),
         ],
@@ -383,7 +436,7 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
         children: [
           Icon(Icons.moped, size: 48, color: AppColors.textTertiary),
           SizedBox(height: 12),
-          Text('Select pickup and destination zones to calculate your Zipp&Go rate.',
+          Text('Select pickup and destination zones followed by specific address details.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
         ],

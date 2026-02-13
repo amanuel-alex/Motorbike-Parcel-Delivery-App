@@ -6,6 +6,8 @@ class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isPrimary;
   final IconData? icon;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const CustomButton({
     super.key,
@@ -13,6 +15,8 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.isPrimary = true,
     this.icon,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -25,7 +29,7 @@ class CustomButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: (backgroundColor ?? AppColors.primary).withOpacity(0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -35,11 +39,18 @@ class CustomButton extends StatelessWidget {
       child: isPrimary
           ? ElevatedButton(
               onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: backgroundColor ?? AppColors.primary,
+                foregroundColor: textColor ?? Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
               child: _buildBody(),
             )
           : OutlinedButton(
               onPressed: onPressed,
               style: OutlinedButton.styleFrom(
+                backgroundColor: backgroundColor,
+                foregroundColor: textColor,
                 side: const BorderSide(color: AppColors.border, width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -55,10 +66,10 @@ class CustomButton extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(text),
+        Text(text, style: TextStyle(color: textColor ?? (isPrimary ? Colors.white : AppColors.textPrimary), fontWeight: FontWeight.bold)),
         if (icon != null) ...[
           const SizedBox(width: 8),
-          Icon(icon, size: 20),
+          Icon(icon, size: 20, color: textColor ?? (isPrimary ? Colors.white : AppColors.textPrimary)),
         ],
       ],
     );

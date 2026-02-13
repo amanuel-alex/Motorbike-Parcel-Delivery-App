@@ -7,6 +7,7 @@ import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
 import '../../core/services/auth_service.dart';
 import 'create_delivery_screen.dart';
+import 'delivery_details_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -410,10 +411,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () {}),
-                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () {}),
-                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () {}),
-                  _buildProfileOption(Icons.help_outline, 'Help & Support', () {}),
+                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () => _showPlaceholder(context, 'Saved Addresses')),
+                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () => _showPlaceholder(context, 'Payment Methods')),
+                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () => _showPlaceholder(context, 'Notifications')),
+                  _buildProfileOption(Icons.help_outline, 'Help & Support', () => _showPlaceholder(context, 'Help & Support')),
                   const SizedBox(height: 24),
                   _buildProfileOption(
                     Icons.logout, 
@@ -492,12 +493,23 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         statusColor = Colors.green;
         statusIcon = Icons.verified;
         break;
+      case 'canceled':
+        statusColor = Colors.red;
+        statusIcon = Icons.cancel;
+        break;
       default:
         statusColor = Colors.grey;
         statusIcon = Icons.help_outline;
     }
 
-    return Container(
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DeliveryDetailsScreen(delivery: d)),
+        );
+      },
+      child: Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -554,6 +566,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -616,6 +629,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showPlaceholder(BuildContext context, String title) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$title feature coming soon!'), duration: const Duration(milliseconds: 500)),
     );
   }
 }

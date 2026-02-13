@@ -181,10 +181,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _buildProviderToggle('Afrimoney'),
+                      child: _buildProviderToggle('Telebirr'),
                     ),
                     Expanded(
-                      child: _buildProviderToggle('Airtel Money'),
+                      child: _buildProviderToggle('CBE Birr'),
                     ),
                   ],
                 ),
@@ -209,9 +209,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                              Icon(Icons.account_balance_wallet, color: AppColors.primary, size: 20),
                              SizedBox(width: 8),
                              Text(
-                              'Merchant Account',
-                              style: TextStyle(color: AppColors.textTertiary, fontWeight: FontWeight.w600),
-                            ),
+                               'Merchant Account',
+                               style: TextStyle(color: AppColors.textTertiary, fontWeight: FontWeight.w600),
+                             ),
                           ],
                         ),
                         const StatusBadge(label: 'VERIFIED', color: Colors.green, icon: Icons.verified),
@@ -225,11 +225,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
                             Text(
-                              '+232 77 123 456',
+                              '+251 911 234 567',
                               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
                             ),
                             Text(
-                              'Zipp&Go Logistics SL',
+                              'Zipp&Go Logistics ET',
                               style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                             ),
                           ],
@@ -316,10 +316,15 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
               _buildSectionTitle('HOW TO PAY'),
               const SizedBox(height: 20),
-              _buildInstructionStep(1, 'Dial USSD Code', 'Open your phone dialer and call *161#'),
-              _buildInstructionStep(2, 'Select Send Money', 'Choose option 1 for sending money to a merchant.'),
-              _buildInstructionStep(3, 'Enter Details', 'Input the phone number and amount shown above exactly.'),
-              _buildInstructionStep(4, 'Confirm & Authorize', 'Enter your PIN to complete the transaction.'),
+              if (selectedProvider == 'Telebirr') ...[
+                _buildInstructionStep(1, 'Open Telebirr App', 'Launch the Telebirr SuperApp on your phone.'),
+                _buildInstructionStep(2, 'Scan or Enter', 'Scan QR or enter merchant number above.'),
+                _buildInstructionStep(3, 'Confirm Amount', 'Ensure amount matches exactly.'),
+              ] else ...[
+                _buildInstructionStep(1, 'Dial *889#', 'Open dialer and call CBE Birr USSD.'),
+                _buildInstructionStep(2, 'Select Merchant', 'Choose Pay Merchant option.'),
+                _buildInstructionStep(3, 'Enter Details', 'Input merchant ID and amount.'),
+              ],
               
               const SizedBox(height: 24),
               GestureDetector(
@@ -360,45 +365,54 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               ),
               
               const SizedBox(height: 32),
-              // Map Snippet
-              Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  const SafeNetworkImage(
-                    imageUrl: 'https://api.placeholder.com/400/120?text=Logistics+Center+Map',
-                    height: 120,
-                    width: double.infinity,
-                    borderRadius: 20,
+              // Map Snippet (Replaced with Gradient Card)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2C3E50), Color(0xFF4CA1AF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Container(
-                    height: 120,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
-                    alignment: Alignment.bottomLeft,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.location_on, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
                           'MAIN LOGISTICS CENTER',
                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
+                        SizedBox(height: 4),
                         Text(
-                          'Wilkinson Road, Freetown',
+                          'Bole Road, Addis Ababa',
                           style: TextStyle(color: Colors.white70, fontSize: 11),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+
               const SizedBox(height: 16),
               const Text(
                 'Transactions are usually verified within 2-5 minutes. If you encounter any issues, please contact our 24/7 support.',
