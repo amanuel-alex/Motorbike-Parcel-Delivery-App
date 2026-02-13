@@ -208,6 +208,15 @@ class DeliveryService {
     });
   }
 
+  // Get Single Delivery Stream
+  Stream<Delivery> getDeliveryStream(String deliveryId) {
+    return _firestore
+        .collection('deliveries')
+        .doc(deliveryId)
+        .snapshots()
+        .map((doc) => Delivery.fromFirestore(doc));
+  }
+
   // Get All Deliveries for Admin
   Stream<List<Delivery>> getAllDeliveries() {
     return _firestore.collection('deliveries')

@@ -6,10 +6,7 @@ class AppConstants {
   };
 
   static const List<String> availableZones = [
-    'Bole',
-    'Arada',
-    'Kirkos',
-    'Yeka',
+    'Bole', 'Kirkos', 'Arada', 'Lideta', 'Yeka', 'Nifas Silk-Lafto', 'Akaki Kality', 'Addis Ketema', 'Gullele', 'Kolfe Keranio'
   ];
 
   static const double baseSameZonePrice = 80.0;

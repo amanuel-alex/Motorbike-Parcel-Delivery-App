@@ -420,7 +420,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   _buildProfileOption(
                     Icons.logout, 
                     'Logout', 
-                    () => authProvider.signOut(),
+                    () => showLogoutDialog(context),
                     color: Colors.red,
                   ),
                 ],

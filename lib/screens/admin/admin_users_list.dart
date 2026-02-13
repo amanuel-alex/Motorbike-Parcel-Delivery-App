@@ -3,6 +3,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/widgets/common_widgets.dart';
 
 class AdminUsersListScreen extends StatelessWidget {
   const AdminUsersListScreen({super.key});
@@ -22,7 +23,7 @@ class AdminUsersListScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.logout, color: Colors.black),
               onPressed: () {
-                Provider.of<AuthProvider>(context, listen: false).signOut();
+                showLogoutDialog(context);
               },
             ),
           ],

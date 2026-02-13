@@ -4,6 +4,7 @@ import '../../core/models/delivery_model.dart';
 import '../customer/delivery_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/widgets/common_widgets.dart';
 
 
 class AdminDeliveryListScreen extends StatelessWidget {
@@ -19,7 +20,7 @@ class AdminDeliveryListScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).signOut();
+              showLogoutDialog(context);
             },
           ),
         ],

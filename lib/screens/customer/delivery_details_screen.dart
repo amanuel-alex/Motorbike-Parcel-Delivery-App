@@ -15,331 +15,351 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<AuthProvider>(context).userRole;
-    final isPendingPayment = delivery.paymentStatus == 'pending';
-    final isCustomer = userRole == 'customer';
-    final isAdmin = userRole == 'admin';
-    final bool canConfirmReceipt = isCustomer && delivery.status == 'completed' && delivery.customerConfirmedAt == null;
-    final bool showPayoutControls = isAdmin && delivery.customerConfirmedAt != null;
+    return StreamBuilder<Delivery>(
+      stream: DeliveryService().getDeliveryStream(delivery.id),
+      initialData: delivery,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(appBar: AppBar(), body: Center(child: Text('Error: ${snapshot.error}')));
+        }
+        if (!snapshot.hasData) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
-      appBar: AppBar(
-        title: const Text('Order Details', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline, color: AppColors.textPrimary),
-            onPressed: () {
-               Navigator.push(
-                 context,
-                 MaterialPageRoute(builder: (_) => OrderChatScreen(
-                   deliveryId: delivery.id, 
-                   title: "Order #${delivery.id.length > 4 ? delivery.id.substring(0, 4) : delivery.id}"
-                 )),
-               );
-            },
+        final currentDelivery = snapshot.data!;
+        final userRole = Provider.of<AuthProvider>(context).userRole;
+        final isPendingPayment = currentDelivery.paymentStatus == 'pending';
+        final isCustomer = userRole == 'customer';
+        final isAdmin = userRole == 'admin';
+        final bool canConfirmReceipt = isCustomer && currentDelivery.status == 'completed' && currentDelivery.customerConfirmedAt == null;
+        final bool showPayoutControls = isAdmin && currentDelivery.customerConfirmedAt != null;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8F9FB),
+          appBar: AppBar(
+            title: const Text('Order Details', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: const BackButton(color: AppColors.textPrimary),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.chat_bubble_outline, color: AppColors.textPrimary),
+                onPressed: () {
+                   Navigator.push(
+                     context,
+                     MaterialPageRoute(builder: (_) => OrderChatScreen(
+                       deliveryId: currentDelivery.id, 
+                       title: "Order #${currentDelivery.id.length > 4 ? currentDelivery.id.substring(0, 4) : currentDelivery.id}"
+                     )),
+                   );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Map Visualization (Gradient Placeholder)
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF2C3E50), Color(0xFF4CA1AF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(_getStatusIcon(delivery.status), size: 40, color: Colors.white),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Map Visualization (Gradient Placeholder)
+                Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF2C3E50), Color(0xFF4CA1AF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      delivery.status.toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text('Live Tracking Mode', style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle('Delivery Information'),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppColors.subtleShadow,
-                    ),
+                  ),
+                  child: Center(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLocationRow(Icons.radio_button_checked, AppColors.primary, 'PICKUP', delivery.pickupAddress),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(_getStatusIcon(currentDelivery.status), size: 40, color: Colors.white),
                         ),
-                        _buildLocationRow(Icons.location_on, Colors.red, 'DROP-OFF', delivery.dropoffAddress),
+                        const SizedBox(height: 16),
+                        Text(
+                          currentDelivery.status.toUpperCase(),
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text('Live Tracking Mode', style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1)),
+                        ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 32),
-                  
-                  _buildSectionTitle('Package & Payment'),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppColors.subtleShadow,
-                    ),
-                    child: Column(
-                      children: [
-                        _buildInfoRow('Package Type', delivery.packageType),
-                        const Divider(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+                
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle('Delivery Information'),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: AppColors.subtleShadow,
+                        ),
+                        child: Column(
                           children: [
-                            const Text('Price', style: TextStyle(color: AppColors.textSecondary)),
-                            Row(
-                              children: [
-                                Text('ETB ${delivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                                if (isAdmin)
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
-                                    onPressed: () => _showEditPriceDialog(context),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                              ],
+                            _buildLocationRow(Icons.radio_button_checked, AppColors.primary, 'PICKUP', currentDelivery.pickupAddress),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Divider(),
                             ),
+                            _buildLocationRow(Icons.location_on, Colors.red, 'DROP-OFF', currentDelivery.dropoffAddress),
                           ],
                         ),
-                        const Divider(height: 24),
-                        _buildInfoRow('Payment', delivery.paymentStatus?.toUpperCase() ?? 'PENDING', 
-                          valueColor: _getPaymentColor(delivery.paymentStatus)),
-                        if (delivery.paymentRef != null) ...[
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text('Ref: ${delivery.paymentRef}', style: const TextStyle(fontSize: 10, color: AppColors.textTertiary)),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-                  
-                  // Customer Confirmation
-                  if (canConfirmReceipt) ...[
-                    const SizedBox(height: 32),
-                    Center(
-                      child: CustomButton(
-                        text: 'Confirm Package Received',
-                        icon: Icons.check_circle,
-                        backgroundColor: Colors.green,
-                        onPressed: () async {
-                           await DeliveryService().confirmReceipt(delivery.id);
-                           if (context.mounted) Navigator.pop(context);
-                        },
                       ),
-                    ),
-                  ],
 
-                  if (isAdmin) ...[
-                     const SizedBox(height: 32),
-                     _buildSectionTitle('Admin Controls'),
-                     const SizedBox(height: 16),
-                     
-                     // Payment Approval Section
-                     if (isPendingPayment) ...[
-                       Container(
-                         padding: const EdgeInsets.all(16),
-                         decoration: BoxDecoration(
-                           color: Colors.white,
-                           borderRadius: BorderRadius.circular(12),
-                           border: Border.all(color: Colors.orange.withOpacity(0.5)),
-                         ),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             const Text("Verify Payment", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange)),
-                             const SizedBox(height: 12),
-                             _buildInfoRow("Provider", delivery.paymentProvider ?? "Unknown"),
-                             const SizedBox(height: 8),
-                             _buildInfoRow("Transaction ID", delivery.paymentRef ?? "N/A"),
-                             const SizedBox(height: 12),
-                             if (delivery.paymentScreenshotUrl != null) ...[
-                               const Text("Payment Proof:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                               const SizedBox(height: 8),
-                               GestureDetector(
-                                 onTap: () {
-                                   showDialog(
-                                     context: context,
-                                     builder: (_) => Dialog(
-                                       child: InteractiveViewer(
-                                         child: Image.network(delivery.paymentScreenshotUrl!),
+                      const SizedBox(height: 32),
+                      
+                      _buildSectionTitle('Package & Payment'),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: AppColors.subtleShadow,
+                        ),
+                        child: Column(
+                          children: [
+                            _buildInfoRow('Package Type', currentDelivery.packageType),
+                            const Divider(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Price', style: TextStyle(color: AppColors.textSecondary)),
+                                Row(
+                                  children: [
+                                    Text('ETB ${currentDelivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                                    if (isAdmin)
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
+                                        onPressed: () => _showEditPriceDialog(context, currentDelivery),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 24),
+                            _buildInfoRow('Payment', currentDelivery.paymentStatus?.toUpperCase() ?? 'PENDING', 
+                              valueColor: _getPaymentColor(currentDelivery.paymentStatus)),
+                            if (currentDelivery.paymentRef != null) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text('Ref: ${currentDelivery.paymentRef}', style: const TextStyle(fontSize: 10, color: AppColors.textTertiary)),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+                      
+                      // Customer Confirmation
+                      if (canConfirmReceipt) ...[
+                        const SizedBox(height: 32),
+                        Center(
+                          child: CustomButton(
+                            text: 'Confirm Package Received',
+                            icon: Icons.check_circle,
+                            backgroundColor: Colors.green,
+                            onPressed: () async {
+                               final confirm = await showConfirmationDialog(context, "Confirm Receipt", "Have you received the package?");
+                               if (confirm) {
+                                  await DeliveryService().confirmReceipt(currentDelivery.id);
+                               }
+                            },
+                          ),
+                        ),
+                      ],
+
+                      if (isAdmin) ...[
+                         const SizedBox(height: 32),
+                         _buildSectionTitle('Admin Controls'),
+                         const SizedBox(height: 16),
+                         
+                         // Payment Approval Section
+                         if (isPendingPayment) ...[
+                           Container(
+                             padding: const EdgeInsets.all(16),
+                             decoration: BoxDecoration(
+                               color: Colors.white,
+                               borderRadius: BorderRadius.circular(12),
+                               border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                             ),
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 const Text("Verify Payment", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange)),
+                                 const SizedBox(height: 12),
+                                 _buildInfoRow("Provider", currentDelivery.paymentProvider ?? "Unknown"),
+                                 const SizedBox(height: 8),
+                                 _buildInfoRow("Transaction ID", currentDelivery.paymentRef ?? "N/A"),
+                                 const SizedBox(height: 12),
+                                 if (currentDelivery.paymentScreenshotUrl != null) ...[
+                                   const Text("Payment Proof:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                   const SizedBox(height: 8),
+                                   GestureDetector(
+                                     onTap: () {
+                                       showDialog(
+                                         context: context,
+                                         builder: (_) => Dialog(
+                                           child: InteractiveViewer(
+                                             child: Image.network(currentDelivery.paymentScreenshotUrl!),
+                                           ),
+                                         ),
+                                       );
+                                     },
+                                     child: ClipRRect(
+                                       borderRadius: BorderRadius.circular(8),
+                                       child: Image.network(
+                                         currentDelivery.paymentScreenshotUrl!,
+                                         height: 200,
+                                         width: double.infinity,
+                                         fit: BoxFit.cover,
+                                         errorBuilder: (ctx, err, stack) => Container(
+                                           height: 100,
+                                           color: Colors.grey[200],
+                                           child: const Center(child: Text("Image Load Failed")),
+                                         ),
                                        ),
                                      ),
-                                   );
-                                 },
-                                 child: ClipRRect(
-                                   borderRadius: BorderRadius.circular(8),
-                                   child: Image.network(
-                                     delivery.paymentScreenshotUrl!,
-                                     height: 200,
-                                     width: double.infinity,
-                                     fit: BoxFit.cover,
-                                     errorBuilder: (ctx, err, stack) => Container(
-                                       height: 100,
-                                       color: Colors.grey[200],
-                                       child: const Center(child: Text("Image Load Failed")),
+                                   ),
+                                   const SizedBox(height: 16),
+                                 ],
+                                 Row(
+                                   children: [
+                                     Expanded(
+                                       child: CustomButton(
+                                         text: 'Approve',
+                                         backgroundColor: Colors.green,
+                                         textColor: Colors.white,
+                                         onPressed: () async {
+                                           if (await showConfirmationDialog(context, "Approve Payment", "Are you sure you want to approve this payment?")) {
+                                              await DeliveryService().updatePaymentStatus(currentDelivery.id, 'approved');
+                                           }
+                                         },
+                                       ),
                                      ),
-                                   ),
-                                 ),
-                               ),
-                               const SizedBox(height: 16),
-                             ],
-                             Row(
-                               children: [
-                                 Expanded(
-                                   child: CustomButton(
-                                     text: 'Approve',
-                                     backgroundColor: Colors.green,
-                                     textColor: Colors.white,
-                                     onPressed: () async {
-                                       await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
-                                       if (context.mounted) Navigator.pop(context);
-                                     },
-                                   ),
-                                 ),
-                                 const SizedBox(width: 12),
-                                 Expanded(
-                                   child: CustomButton(
-                                     text: 'Reject',
-                                     backgroundColor: Colors.red,
-                                     textColor: Colors.white,
-                                     onPressed: () async {
-                                       await DeliveryService().updatePaymentStatus(delivery.id, 'canceled');
-                                       if (context.mounted) Navigator.pop(context);
-                                     },
-                                   ),
+                                     const SizedBox(width: 12),
+                                     Expanded(
+                                       child: CustomButton(
+                                         text: 'Reject',
+                                         backgroundColor: Colors.red,
+                                         textColor: Colors.white,
+                                         onPressed: () async {
+                                           if (await showConfirmationDialog(context, "Reject Payment", "Are you sure you want to reject this payment?")) {
+                                              await DeliveryService().updatePaymentStatus(currentDelivery.id, 'canceled');
+                                           }
+                                         },
+                                       ),
+                                     ),
+                                   ],
                                  ),
                                ],
                              ),
-                           ],
-                         ),
-                       ),
-                       const SizedBox(height: 24),
-                     ] else if (delivery.paymentStatus != 'approved' && delivery.status != 'canceled' && delivery.status != 'completed') ...[
-                       // Manual Approval Fallback
-                       Container(
-                         padding: const EdgeInsets.all(16),
-                         decoration: BoxDecoration(
-                           color: Colors.white,
-                           borderRadius: BorderRadius.circular(12),
-                           border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                         ),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             const Text("Manual Action", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                             const SizedBox(height: 8),
-                             const Text("No digital payment proof submitted yet.", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                             const SizedBox(height: 12),
-                             CustomButton(
-                               text: 'Mark as Paid (Cash/External)',
-                               backgroundColor: Colors.blue,
-                               textColor: Colors.white,
-                               onPressed: () async {
-                                 await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
-                                 if (context.mounted) Navigator.pop(context);
-                               },
+                           ),
+                           const SizedBox(height: 24),
+                         ] else if (currentDelivery.paymentStatus != 'approved' && currentDelivery.status != 'canceled' && currentDelivery.status != 'completed') ...[
+                           // Manual Approval Fallback
+                           Container(
+                             padding: const EdgeInsets.all(16),
+                             decoration: BoxDecoration(
+                               color: Colors.white,
+                               borderRadius: BorderRadius.circular(12),
+                               border: Border.all(color: Colors.grey.withOpacity(0.3)),
                              ),
-                           ],
-                         ),
-                       ),
-                       const SizedBox(height: 24),
-                     ],
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 const Text("Manual Action", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                 const SizedBox(height: 8),
+                                 const Text("No digital payment proof submitted yet.", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                 const SizedBox(height: 12),
+                                 CustomButton(
+                                   text: 'Mark as Paid (Cash/External)',
+                                   backgroundColor: Colors.blue,
+                                   textColor: Colors.white,
+                                   onPressed: () async {
+                                     if (await showConfirmationDialog(context, "Approve Payment", "Confirm manual payment?")) {
+                                        await DeliveryService().updatePaymentStatus(currentDelivery.id, 'approved');
+                                     }
+                                   },
+                                 ),
+                               ],
+                             ),
+                           ),
+                           const SizedBox(height: 24),
+                         ],
 
-                     // Payout Controls
-                     if (showPayoutControls) _buildPayoutSection(context),
+                         // Payout Controls
+                         if (showPayoutControls) _buildPayoutSection(context, currentDelivery),
 
-                     CustomButton(
-                        text: 'Force Cancel Order',
-                        onPressed: () async {
-                          await DeliveryService().cancelDelivery(delivery.id);
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                        backgroundColor: Colors.red.withOpacity(0.1),
-                        textColor: Colors.red,
-                      ),
-                  ] else if (delivery.status == 'pending')
-                    CustomButton(
-                      text: 'Cancel Order',
-                      onPressed: () async {
-                        try {
-                          await DeliveryService().cancelDelivery(delivery.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order canceled successfully'), backgroundColor: Colors.red));
-                            Navigator.pop(context);
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to cancel: $e'), backgroundColor: Colors.red));
-                          }
-                        }
-                      },
-                      backgroundColor: Colors.red.withOpacity(0.1),
-                      textColor: Colors.red,
-                    )
-                  else if (delivery.status == 'picked')
-                    Center(
-                      child: Text(
-                        'Your package is on the way!',
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                ],
-              ),
+                         CustomButton(
+                            text: 'Force Cancel Order',
+                            onPressed: () async {
+                              if (await showConfirmationDialog(context, "Cancel Order", "Are you sure you want to cancel this order? This cannot be undone.")) {
+                                 await DeliveryService().cancelDelivery(currentDelivery.id);
+                              }
+                            },
+                            backgroundColor: Colors.red.withOpacity(0.1),
+                            textColor: Colors.red,
+                          ),
+                      ] else if (currentDelivery.status == 'pending')
+                        CustomButton(
+                          text: 'Cancel Order',
+                          onPressed: () async {
+                            if (await showConfirmationDialog(context, "Cancel Order", "Cancel your delivery request?")) {
+                                try {
+                                  await DeliveryService().cancelDelivery(currentDelivery.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order canceled successfully'), backgroundColor: Colors.red));
+                                    Navigator.pop(context);
+                                  }
+                                } catch (e) {
+                                  // Error handling
+                                }
+                            }
+                          },
+                          backgroundColor: Colors.red.withOpacity(0.1),
+                          textColor: Colors.red,
+                        )
+                      else if (currentDelivery.status == 'picked')
+                        Center(
+                          child: Text(
+                            'Your package is on the way!',
+                            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -399,7 +419,7 @@ class DeliveryDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPayoutSection(BuildContext context) {
+  Widget _buildPayoutSection(BuildContext context, Delivery delivery) {
     if (delivery.expectedDeliveryTime == null || delivery.customerConfirmedAt == null) {
       return const SizedBox.shrink(); 
     }
@@ -474,8 +494,9 @@ class DeliveryDetailsScreen extends StatelessWidget {
               text: "Pay Rider",
               backgroundColor: AppColors.primary,
               onPressed: () async {
-                 await DeliveryService().payRider(delivery.id, totalPayout);
-                 if (context.mounted) Navigator.pop(context);
+                 if (await showConfirmationDialog(context, "Pay Rider", "Confirm payout of ETB ${totalPayout.toStringAsFixed(0)}?")) {
+                    await DeliveryService().payRider(delivery.id, totalPayout);
+                 }
               },
             )
         ],
@@ -487,7 +508,7 @@ class DeliveryDetailsScreen extends StatelessWidget {
     return "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
   }
 
-  void _showEditPriceDialog(BuildContext context) {
+  void _showEditPriceDialog(BuildContext context, Delivery delivery) {
     final controller = TextEditingController(text: delivery.price.toStringAsFixed(0));
     showDialog(
       context: context,
@@ -504,8 +525,10 @@ class DeliveryDetailsScreen extends StatelessWidget {
              onPressed: () async {
                final double? newPrice = double.tryParse(controller.text);
                if (newPrice != null) {
+                 // Confirmation for price update? User didn't ask explicitly but good practice.
+                 // "update delivery price is not interactive or fast update" -> Updating stream fixes interactive part.
+                 Navigator.pop(context); // Close dialog first
                  await DeliveryService().updateDeliveryPrice(delivery.id, newPrice);
-                 if (context.mounted) Navigator.pop(context);
                }
              },
              child: const Text("Update"),

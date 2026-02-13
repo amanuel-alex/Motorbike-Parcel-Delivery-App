@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -12,7 +14,7 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.text,
-    this.onPressed,
+    required this.onPressed,
     this.isPrimary = true,
     this.icon,
     this.backgroundColor,
@@ -21,57 +23,43 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final bgColor = backgroundColor ?? (isPrimary ? AppColors.primary : Colors.transparent);
+    final txtColor = textColor ?? (isPrimary ? Colors.white : AppColors.primary);
+    final borderSide = isPrimary || backgroundColor != null 
+        ? BorderSide.none 
+        : const BorderSide(color: AppColors.border, width: 1.5);
+
+    return SizedBox(
       width: double.infinity,
       height: 56,
-      decoration: isPrimary
-          ? BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: (backgroundColor ?? AppColors.primary).withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            )
-          : null,
-      child: isPrimary
-          ? ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: backgroundColor ?? AppColors.primary,
-                foregroundColor: textColor ?? Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: txtColor,
+          elevation: 0, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: borderSide,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 20),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              child: _buildBody(),
-            )
-          : OutlinedButton(
-              onPressed: onPressed,
-              style: OutlinedButton.styleFrom(
-                backgroundColor: backgroundColor,
-                foregroundColor: textColor,
-                side: const BorderSide(color: AppColors.border, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                minimumSize: const Size(double.infinity, 56),
-              ),
-              child: _buildBody(),
             ),
-    );
-  }
-
-  Widget _buildBody() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(text, style: TextStyle(color: textColor ?? (isPrimary ? Colors.white : AppColors.textPrimary), fontWeight: FontWeight.bold)),
-        if (icon != null) ...[
-          const SizedBox(width: 8),
-          Icon(icon, size: 20, color: textColor ?? (isPrimary ? Colors.white : AppColors.textPrimary)),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -114,6 +102,43 @@ class StatusBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> showLogoutDialog(BuildContext context) async {
+  return showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Logout"),
+      content: const Text("Are you sure you want to logout?"),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            Provider.of<AuthProvider>(context, listen: false).signOut();
+          },
+          child: const Text("Logout", style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool> showConfirmationDialog(BuildContext context, String title, String content) async {
+  return await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(content),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text("Confirm"),
+        ),
+      ],
+    ),
+  ) ?? false;
 }
 class SafeNetworkImage extends StatelessWidget {
   final String imageUrl;

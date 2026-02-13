@@ -3,14 +3,39 @@ import '../../core/services/delivery_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 
-class AdminZonesScreen extends StatelessWidget {
+class AdminZonesScreen extends StatefulWidget {
   const AdminZonesScreen({super.key});
+
+  @override
+  State<AdminZonesScreen> createState() => _AdminZonesScreenState();
+}
+
+class _AdminZonesScreenState extends State<AdminZonesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('Zone Management', style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
@@ -19,6 +44,7 @@ class AdminZonesScreen extends StatelessWidget {
           bottom: const TabBar(
              labelColor: AppColors.primary,
              unselectedLabelColor: Colors.grey,
+             indicatorColor: AppColors.primary,
              tabs: [
                Tab(text: "Pending Requests"),
                Tab(text: "Active Zones"),
@@ -32,6 +58,7 @@ class AdminZonesScreen extends StatelessWidget {
           ],
         ),
         floatingActionButton: FloatingActionButton(
+          backgroundColor: AppColors.primary,
           child: const Icon(Icons.add),
           onPressed: () => _showAddZoneDialog(context),
         ),
@@ -46,27 +73,55 @@ class AdminZonesScreen extends StatelessWidget {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         
         final requests = snapshot.data!;
-        if (requests.isEmpty) return const Center(child: Text("No new zone requests"));
+        if (requests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle_outline, size: 64, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                const Text("No pending zone requests", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          );
+        }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: requests.length,
           itemBuilder: (context, index) {
             final req = requests[index];
-            return ListTile(
-              title: Text(req['name']),
-              subtitle: Text("Requested: ${(req['requestedAt'] as dynamic)?.toDate() ?? 'Now'}"),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.check, color: Colors.green),
-                    onPressed: () => DeliveryService().approveZoneRequest(req['id'], req['name']),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: () => DeliveryService().rejectZoneRequest(req['id']),
-                  ),
-                ],
+            return Card(
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              child: ListTile(
+                title: Text(req['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Requested: ${(req['requestedAt'] as dynamic)?.toDate().toString().split('.')[0] ?? 'Now'}"),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green),
+                      onPressed: () async {
+                        if (await showConfirmationDialog(context, "Approve Zone", "Add '${req['name']}' to active zones?")) {
+                           await DeliveryService().approveZoneRequest(req['id'], req['name']);
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () async {
+                        if (await showConfirmationDialog(context, "Reject Zone", "Reject request for '${req['name']}'?")) {
+                           await DeliveryService().rejectZoneRequest(req['id']);
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -76,32 +131,79 @@ class AdminZonesScreen extends StatelessWidget {
   }
 
   Widget _buildZonesTab(BuildContext context) {
-    return StreamBuilder<List<String>>(
-      stream: DeliveryService().getZonesStream(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        
-        final dbZones = snapshot.data ?? [];
-        // Combine with hardcoded
-        final Set<String> combined = {};
-        combined.addAll([
-          'Bole', 'Kirkos', 'Arada', 'Lideta', 'Yeka', 'Nifas Silk-Lafto', 'Akaki Kality', 'Addis Ketema', 'Gullele', 'Kolfe Keranio'
-        ]);
-        combined.addAll(dbZones);
-        final zones = combined.toList()..sort();
-        
-        return ListView.builder(
-          itemCount: zones.length,
-          itemBuilder: (context, index) {
-            final isDefault = !dbZones.contains(zones[index]);
-            return ListTile(
-              leading: Icon(Icons.location_on, color: isDefault ? Colors.grey : AppColors.primary),
-              title: Text(zones[index]),
-              subtitle: isDefault ? const Text("System Default", style: TextStyle(fontSize: 10)) : const Text("Custom Zone", style: TextStyle(fontSize: 10, color: Colors.green)),
-            );
-          },
-        );
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: "Search zones...",
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<List<String>>(
+            stream: DeliveryService().getZonesStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              final dbZones = snapshot.data ?? [];
+              final Set<String> combined = {};
+              combined.addAll([
+                'Bole', 'Kirkos', 'Arada', 'Lideta', 'Yeka', 'Nifas Silk-Lafto', 'Akaki Kality', 'Addis Ketema', 'Gullele', 'Kolfe Keranio'
+              ]);
+              combined.addAll(dbZones);
+              
+              final List<String> allZones = combined.toList()..sort();
+              
+              // Filter
+              final filteredZones = allZones.where((zone) => 
+                zone.toLowerCase().contains(_searchQuery.toLowerCase())
+              ).toList();
+
+              if (filteredZones.isEmpty) {
+                return const Center(child: Text("No zones found"));
+              }
+              
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: filteredZones.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final zone = filteredZones[index];
+                  final isSystem = !dbZones.contains(zone);
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (isSystem ? Colors.grey : AppColors.primary).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.location_on, color: isSystem ? Colors.grey : AppColors.primary),
+                    ),
+                    title: Text(zone, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: isSystem 
+                      ? const Text("System Default", style: TextStyle(fontSize: 12)) 
+                      : const Text("Custom Zone", style: TextStyle(fontSize: 12, color: Colors.green)),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -113,13 +215,15 @@ class AdminZonesScreen extends StatelessWidget {
         title: const Text("Add New Zone"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: "Zone Name"),
+          decoration: const InputDecoration(hintText: "Zone Name (e.g. Sarbet)"),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
               if (controller.text.isNotEmpty) {
+                // Check if already exists? Service handles duplicates but silently.
                 await DeliveryService().addZone(controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
