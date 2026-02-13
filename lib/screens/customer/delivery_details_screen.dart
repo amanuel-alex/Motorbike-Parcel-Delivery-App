@@ -5,6 +5,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import 'order_chat_screen.dart';
 
 
 class DeliveryDetailsScreen extends StatelessWidget {
@@ -28,6 +29,20 @@ class DeliveryDetailsScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textPrimary),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline, color: AppColors.textPrimary),
+            onPressed: () {
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (_) => OrderChatScreen(
+                   deliveryId: delivery.id, 
+                   title: "Order #${delivery.id.length > 4 ? delivery.id.substring(0, 4) : delivery.id}"
+                 )),
+               );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

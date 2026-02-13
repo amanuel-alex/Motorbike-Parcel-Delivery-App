@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../models/delivery_model.dart';
+import '../models/chat_message.dart';
 import 'auth_service.dart';
 
 class DeliveryService {
@@ -291,5 +292,27 @@ class DeliveryService {
   // Reject Zone Request
   Future<void> rejectZoneRequest(String requestId) async {
     await _firestore.collection('ZoneRequests').doc(requestId).delete();
+  }
+
+  // --- Chat System ---
+
+  Future<void> sendMessage(String deliveryId, ChatMessage message) async {
+    await _firestore
+        .collection('deliveries')
+        .doc(deliveryId)
+        .collection('messages')
+        .add(message.toMap());
+  }
+
+  Stream<List<ChatMessage>> getChatMessages(String deliveryId) {
+    return _firestore
+        .collection('deliveries')
+        .doc(deliveryId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatMessage.fromFirestore(doc))
+            .toList());
   }
 }
