@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:country_picker/country_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -161,55 +162,158 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Feature Card
+              // Enhanced Feature Card with Image Support
               Container(
                 width: double.infinity,
-                height: 200,
+                height: 220,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF9F2),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withOpacity(0.1),
+                      const Color(0xFFFFF9F2),
+                      AppColors.primary.withOpacity(0.05),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Stack(
                   children: [
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Icon(
-                        Icons.moped,
-                        size: 150,
-                        color: AppColors.primary.withOpacity(0.1),
+                    // Try to load custom image, fallback to icon design
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          'assets/images/delivery_hero.png',
+                          width: double.infinity,
+                          height: 220,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback: Show icon-based design if image not found
+                            return Stack(
+                              children: [
+                                // Decorative Elements
+                                Positioned(
+                                  top: 20,
+                                  right: 20,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      size: 30,
+                                      color: AppColors.primary.withOpacity(0.3),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 40,
+                                  left: 30,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.delivered.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      size: 20,
+                                      color: AppColors.delivered.withOpacity(0.4),
+                                    ),
+                                  ),
+                                ),
+                                // Main Illustration
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(24),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary.withOpacity(0.2),
+                                              blurRadius: 20,
+                                              spreadRadius: 5,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.delivery_dining,
+                                          size: 60,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
+                    // Info Card (Always visible)
                     Positioned(
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: AppColors.subtleShadow,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'FASTEST IN EAST AFRICA',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.flash_on, size: 12, color: AppColors.primary),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'FASTEST IN EAST AFRICA',
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             const Text(
                               'Reliable parcel delivery at your doorstep.',
                               style: TextStyle(
                                 color: AppColors.textPrimary,
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -301,6 +405,10 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
                     child: TextField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(9),
+                      ],
                       decoration: InputDecoration(
                         hintText: _selectedCountry.example.isEmpty 
                             ? '000 000 000' 
