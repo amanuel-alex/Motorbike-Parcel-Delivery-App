@@ -119,7 +119,8 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
                 return Center(child: Text('Error: ${snapshot.error}'));
               }
 
-              final jobs = snapshot.data ?? [];
+              final jobsRaw = snapshot.data ?? [];
+              final jobs = jobsRaw.where((job) => job.paymentStatus == 'approved').toList();
 
               if (jobs.isEmpty) {
                 return _buildEmptyState('No jobs available right now');

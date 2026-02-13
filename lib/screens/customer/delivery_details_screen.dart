@@ -233,6 +233,35 @@ class DeliveryDetailsScreen extends StatelessWidget {
                          ),
                        ),
                        const SizedBox(height: 24),
+                     ] else if (delivery.paymentStatus != 'approved' && delivery.status != 'canceled' && delivery.status != 'completed') ...[
+                       // Manual Approval Fallback
+                       Container(
+                         padding: const EdgeInsets.all(16),
+                         decoration: BoxDecoration(
+                           color: Colors.white,
+                           borderRadius: BorderRadius.circular(12),
+                           border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                         ),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             const Text("Manual Action", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                             const SizedBox(height: 8),
+                             const Text("No digital payment proof submitted yet.", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                             const SizedBox(height: 12),
+                             CustomButton(
+                               text: 'Mark as Paid (Cash/External)',
+                               backgroundColor: Colors.blue,
+                               textColor: Colors.white,
+                               onPressed: () async {
+                                 await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
+                                 if (context.mounted) Navigator.pop(context);
+                               },
+                             ),
+                           ],
+                         ),
+                       ),
+                       const SizedBox(height: 24),
                      ],
 
                      // Payout Controls

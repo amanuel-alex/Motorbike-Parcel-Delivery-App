@@ -90,16 +90,22 @@ class DeliveryService {
 
   // Update Payment Status (For Boss/Admin)
   Future<void> updatePaymentStatus(String deliveryId, String status) async {
-    // status should be 'approved' or 'canceled'
-    await _firestore.collection('deliveries').doc(deliveryId).update({
+    final Map<String, dynamic> updates = {
       'paymentStatus': status,
-      'events': FieldValue.arrayUnion([
-        {
-          'type': 'payment_$status',
-          'at': Timestamp.now(),
-        }
-      ]),
-    });
+    };
+    
+    final List<Map<String, dynamic>> events = [
+      {'type': 'payment_$status', 'at': Timestamp.now()}
+    ];
+
+    if (status == 'canceled') {
+      updates['status'] = 'canceled';
+      events.add({'type': 'canceled', 'at': Timestamp.now(), 'reason': 'Payment Rejected'});
+    }
+    
+    updates['events'] = FieldValue.arrayUnion(events);
+
+    await _firestore.collection('deliveries').doc(deliveryId).update(updates);
   }
 
   // Get stream of pending deliveries for riders
