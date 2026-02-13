@@ -130,7 +130,24 @@ class DeliveryDetailsScreen extends StatelessWidget {
                       children: [
                         _buildInfoRow('Package Type', delivery.packageType),
                         const Divider(height: 24),
-                        _buildInfoRow('Price', 'ETB ${delivery.price.toStringAsFixed(0)}'),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Price', style: TextStyle(color: AppColors.textSecondary)),
+                            Row(
+                              children: [
+                                Text('ETB ${delivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                                if (isAdmin)
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
+                                    onPressed: () => _showEditPriceDialog(context),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                         const Divider(height: 24),
                         _buildInfoRow('Payment', delivery.paymentStatus?.toUpperCase() ?? 'PENDING', 
                           valueColor: _getPaymentColor(delivery.paymentStatus)),
@@ -468,5 +485,33 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
   String _formatTime(DateTime t) {
     return "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+  }
+
+  void _showEditPriceDialog(BuildContext context) {
+    final controller = TextEditingController(text: delivery.price.toStringAsFixed(0));
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Update Price"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "New Price (ETB)"),
+        ),
+        actions: [
+           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+           ElevatedButton(
+             onPressed: () async {
+               final double? newPrice = double.tryParse(controller.text);
+               if (newPrice != null) {
+                 await DeliveryService().updateDeliveryPrice(delivery.id, newPrice);
+                 if (context.mounted) Navigator.pop(context);
+               }
+             },
+             child: const Text("Update"),
+           )
+        ],
+      ),
+    );
   }
 }

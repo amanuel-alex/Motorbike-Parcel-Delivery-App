@@ -8,6 +8,7 @@ import '../../core/models/delivery_model.dart';
 import '../../core/services/auth_service.dart';
 import 'create_delivery_screen.dart';
 import 'delivery_details_screen.dart';
+import 'order_chat_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -554,6 +555,20 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 ],
               ),
               const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.chat_bubble_outline, size: 20, color: AppColors.primary),
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                 onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => OrderChatScreen(
+                         deliveryId: d.id,
+                         title: "Order #${d.id.length > 4 ? d.id.substring(0, 4) : d.id}"
+                      )),
+                    );
+                 },
+              ),
               Text('ETB ${d.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
             ],
           ),

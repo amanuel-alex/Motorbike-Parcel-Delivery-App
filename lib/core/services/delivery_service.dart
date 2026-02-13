@@ -227,6 +227,16 @@ class DeliveryService {
     });
   }
 
+  // Update Delivery Price (Admin Override)
+  Future<void> updateDeliveryPrice(String deliveryId, double newPrice) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'price': newPrice,
+      'events': FieldValue.arrayUnion([
+        {'type': 'price_updated', 'at': Timestamp.now(), 'newPrice': newPrice}
+      ]),
+    });
+  }
+
   // --- Zone Management (Dynamic) ---
 
   // Add a new Zone
