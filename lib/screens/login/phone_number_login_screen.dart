@@ -177,7 +177,7 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
                       child: Icon(
                         Icons.moped,
                         size: 150,
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                       ),
                     ),
                     Positioned(

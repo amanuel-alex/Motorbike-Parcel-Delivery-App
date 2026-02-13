@@ -40,7 +40,7 @@ class CustomerHomeScreen extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.only(bottom: 20),
                       child: ActionChip(
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         label: const Text('DEMO: SWITCH TO RIDER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                         onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('rider'),
                         avatar: const Icon(Icons.moped, color: Colors.white, size: 14),
@@ -55,7 +55,7 @@ class CustomerHomeScreen extends StatelessWidget {
                           Text(
                             'HELLO,',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.5,
@@ -173,7 +173,7 @@ class CustomerHomeScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.textTertiary.withOpacity(0.5)),
+          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.textTertiary.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           const Text('No deliveries yet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const Text('Create your first delivery above!', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
@@ -222,7 +222,7 @@ class CustomerHomeScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), shape: BoxShape.circle),
                 child: Icon(statusIcon, color: statusColor, size: 20),
               ),
               const SizedBox(width: 12),
@@ -237,7 +237,7 @@ class CustomerHomeScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _getPaymentStatusColor(d.paymentStatus!).withOpacity(0.1),
+                          color: _getPaymentStatusColor(d.paymentStatus!).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(

@@ -25,7 +25,7 @@ class CustomButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -82,9 +82,9 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -144,7 +144,7 @@ class SafeNetworkImage extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.image_not_supported_outlined,
-                    color: AppColors.textTertiary.withOpacity(0.5),
+                    color: AppColors.textTertiary.withValues(alpha: 0.5),
                     size: height != null && height! < 100 ? 24 : 40,
                   ),
                   if (height == null || height! >= 100) ...[
@@ -171,7 +171,7 @@ class SafeNetworkImage extends StatelessWidget {
                         loadingProgress.expectedTotalBytes!
                     : null,
                 strokeWidth: 2,
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
               ),
             );
           },
