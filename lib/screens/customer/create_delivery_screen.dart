@@ -41,11 +41,44 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
 
   Future<void> _fetchZones() async {
     final fetchedZones = await _deliveryService.getZones();
-    if (fetchedZones.isNotEmpty && mounted) {
+    if (mounted) {
       setState(() {
-        _zones = fetchedZones;
+         final Set<String> allZones = {};
+         allZones.addAll(AppConstants.availableZones);
+         allZones.addAll(fetchedZones);
+         _zones = allZones.toList()..sort();
+         _zones.add("Other / Request New Zone");
       });
     }
+  }
+
+  void _showRequestZoneDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Request New Zone"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter zone name (e.g. Sarbet)"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              if (controller.text.trim().isNotEmpty) {
+                 await _deliveryService.requestNewZone(controller.text.trim());
+                 if (context.mounted) {
+                   Navigator.pop(context);
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Zone requested! Admin will review it.")));
+                 }
+              }
+            },
+            child: const Text("Request"),
+          )
+        ],
+      ),
+    );
   }
 
   Future<void> _calculatePrice() async {
@@ -182,8 +215,12 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                 icon: Icons.map,
                 iconColor: AppColors.primary,
                 onChanged: (val) {
-                  setState(() => selectedPickupZone = val);
-                  _calculatePrice();
+                  if (val == "Other / Request New Zone") {
+                    _showRequestZoneDialog();
+                  } else {
+                    setState(() => selectedPickupZone = val);
+                    _calculatePrice();
+                  }
                 },
               ),
               const SizedBox(height: 12),
@@ -199,8 +236,12 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
                 icon: Icons.map,
                 iconColor: Colors.redAccent,
                 onChanged: (val) {
-                  setState(() => selectedDropZone = val);
-                  _calculatePrice();
+                  if (val == "Other / Request New Zone") {
+                    _showRequestZoneDialog();
+                  } else {
+                    setState(() => selectedDropZone = val);
+                    _calculatePrice();
+                  }
                 },
               ),
               const SizedBox(height: 12),

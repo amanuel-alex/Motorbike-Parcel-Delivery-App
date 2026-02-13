@@ -36,6 +36,13 @@ class DeliveryService {
     }
   }
 
+  // Get streaming list of available zones
+  Stream<List<String>> getZonesStream() {
+    return _firestore.collection('Zones').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()['name'] as String).toList();
+    });
+  }
+
   // Create a new delivery request (Denormalized)
   Future<String> createDelivery(Delivery delivery) async {
     // Demo Mode: Simulate success for presentations if network is unstable
@@ -217,5 +224,72 @@ class DeliveryService {
         {'type': 'canceled', 'at': Timestamp.now()}
       ]),
     });
+  }
+
+  // --- Zone Management (Dynamic) ---
+
+  // Add a new Zone
+  Future<void> addZone(String zoneName) async {
+    // Check if exists first to avoid duplicates
+    final snapshot = await _firestore.collection('Zones').where('name', isEqualTo: zoneName).get();
+    if (snapshot.docs.isNotEmpty) return;
+
+    await _firestore.collection('Zones').add({
+      'name': zoneName,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Add Price Rule
+  Future<void> addZonePrice(String pickup, String dropoff, double price) async {
+    // Check if rule exists
+    final snapshot = await _firestore.collection('ZonePrices')
+        .where('pickup', isEqualTo: pickup)
+        .where('dropoff', isEqualTo: dropoff)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      // Update existing
+      await _firestore.collection('ZonePrices').doc(snapshot.docs.first.id).update({'price': price});
+    } else {
+      // Create new
+      await _firestore.collection('ZonePrices').add({
+        'pickup': pickup,
+        'dropoff': dropoff,
+        'price': price,
+      });
+    }
+  }
+
+  // Request New Zone (Customer)
+  Future<void> requestNewZone(String zoneName) async {
+    await _firestore.collection('ZoneRequests').add({
+      'name': zoneName,
+      'requestedAt': FieldValue.serverTimestamp(),
+      'status': 'pending', 
+    });
+  }
+
+  // Get Zone Requests (Admin)
+  Stream<List<Map<String, dynamic>>> getZoneRequests() {
+    return _firestore.collection('ZoneRequests')
+        .orderBy('requestedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  // Approve Zone Request
+  Future<void> approveZoneRequest(String requestId, String zoneName) async {
+    await addZone(zoneName); // Add to official list
+    await _firestore.collection('ZoneRequests').doc(requestId).delete(); // Remove request
+  }
+
+  // Reject Zone Request
+  Future<void> rejectZoneRequest(String requestId) async {
+    await _firestore.collection('ZoneRequests').doc(requestId).delete();
   }
 }

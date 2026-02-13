@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'admin_delivery_list.dart';
 import 'admin_users_list.dart';
+import 'admin_zones_screen.dart';
 
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final List<Widget> _pages = [
     const AdminDeliveryListScreen(), // Index 0: Deliveries
     const AdminUsersListScreen(), // Index 1: Users
-    const Center(child: Text("System Settings - Coming Soon")), // Index 2: Settings
+    const AdminZonesScreen(), // Index 2: Zones
   ];
 
   @override
@@ -32,7 +33,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Deliveries'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Zones'),
         ],
       ),
     );
