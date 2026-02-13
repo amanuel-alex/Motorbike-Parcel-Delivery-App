@@ -50,6 +50,10 @@ class Delivery {
   final String? paymentStatus; // pending -> approved -> canceled
   final String? paymentProvider;
   final String? paymentScreenshotUrl;
+  final DateTime? expectedDeliveryTime; // For "On Time" calculation
+  final DateTime? customerConfirmedAt; // Customer says "It is reached"
+  final bool riderPaid; // Admin paid the rider
+  final double? riderPayoutAmount; // Calculated amount
 
   Delivery({
     required this.id,
@@ -74,6 +78,10 @@ class Delivery {
     this.paymentStatus,
     this.paymentProvider,
     this.paymentScreenshotUrl,
+    this.expectedDeliveryTime,
+    this.customerConfirmedAt,
+    this.riderPaid = false,
+    this.riderPayoutAmount,
   });
 
   factory Delivery.fromFirestore(DocumentSnapshot doc) {
@@ -103,6 +111,10 @@ class Delivery {
       paymentStatus: data['paymentStatus'],
       paymentProvider: data['paymentProvider'],
       paymentScreenshotUrl: data['paymentScreenshotUrl'],
+      expectedDeliveryTime: (data['expectedDeliveryTime'] as Timestamp?)?.toDate(),
+      customerConfirmedAt: (data['customerConfirmedAt'] as Timestamp?)?.toDate(),
+      riderPaid: data['riderPaid'] ?? false,
+      riderPayoutAmount: (data['riderPayoutAmount'] ?? 0).toDouble(),
     );
   }
 
@@ -129,6 +141,10 @@ class Delivery {
       'paymentStatus': paymentStatus,
       'paymentProvider': paymentProvider,
       'paymentScreenshotUrl': paymentScreenshotUrl,
+      'expectedDeliveryTime': expectedDeliveryTime != null ? Timestamp.fromDate(expectedDeliveryTime!) : null,
+      'customerConfirmedAt': customerConfirmedAt != null ? Timestamp.fromDate(customerConfirmedAt!) : null,
+      'riderPaid': riderPaid,
+      'riderPayoutAmount': riderPayoutAmount,
     };
   }
 }

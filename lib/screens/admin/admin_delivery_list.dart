@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/models/delivery_model.dart';
 import '../customer/delivery_details_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+
 
 class AdminDeliveryListScreen extends StatelessWidget {
   const AdminDeliveryListScreen({super.key});
@@ -9,6 +12,18 @@ class AdminDeliveryListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Provider.of<AuthProvider>(context, listen: false).signOut();
+            },
+          ),
+        ],
+      ),
       backgroundColor: const Color(0xFFF8F9FB),
       body: StreamBuilder<List<Delivery>>(
         stream: DeliveryService().getAllDeliveries(),

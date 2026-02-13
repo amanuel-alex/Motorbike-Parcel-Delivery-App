@@ -45,6 +45,8 @@ class DeliveryService {
     }
 
     final Map<String, dynamic> data = delivery.toMap();
+    // Logic: Set expected time to 30 mins from now (Mock)
+    data['expectedDeliveryTime'] = Timestamp.fromDate(DateTime.now().add(const Duration(minutes: 30)));
     data['events'] = FieldValue.arrayUnion([
       {'type': 'created', 'at': Timestamp.now()}
     ]);
@@ -168,6 +170,27 @@ class DeliveryService {
         {'type': 'completed', 'at': Timestamp.now()}
       ]),
 
+    });
+  }
+
+  // Customer confirms receipt
+  Future<void> confirmReceipt(String deliveryId) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'customerConfirmedAt': FieldValue.serverTimestamp(),
+      'events': FieldValue.arrayUnion([
+        {'type': 'customer_confirmed', 'at': Timestamp.now()}
+      ]),
+    });
+  }
+
+  // Admin pays rider
+  Future<void> payRider(String deliveryId, double amount) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'riderPaid': true,
+      'riderPayoutAmount': amount,
+      'events': FieldValue.arrayUnion([
+        {'type': 'rider_paid', 'at': Timestamp.now(), 'amount': amount}
+      ]),
     });
   }
 

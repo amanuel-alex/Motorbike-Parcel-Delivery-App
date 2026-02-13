@@ -16,6 +16,10 @@ class DeliveryDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userRole = Provider.of<AuthProvider>(context).userRole;
     final isPendingPayment = delivery.paymentStatus == 'pending';
+    final isCustomer = userRole == 'customer';
+    final isAdmin = userRole == 'admin';
+    final bool canConfirmReceipt = isCustomer && delivery.status == 'completed' && delivery.customerConfirmedAt == null;
+    final bool showPayoutControls = isAdmin && delivery.customerConfirmedAt != null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
@@ -128,40 +132,112 @@ class DeliveryDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 48),
                   
-                  if (userRole == 'admin') ...[
+                  // Customer Confirmation
+                  if (canConfirmReceipt) ...[
+                    const SizedBox(height: 32),
+                    Center(
+                      child: CustomButton(
+                        text: 'Confirm Package Received',
+                        icon: Icons.check_circle,
+                        backgroundColor: Colors.green,
+                        onPressed: () async {
+                           await DeliveryService().confirmReceipt(delivery.id);
+                           if (context.mounted) Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  ],
+
+                  if (isAdmin) ...[
                      const SizedBox(height: 32),
                      _buildSectionTitle('Admin Controls'),
                      const SizedBox(height: 16),
+                     
+                     // Payment Approval Section
                      if (isPendingPayment) ...[
-                       Row(
-                         children: [
-                           Expanded(
-                             child: CustomButton(
-                               text: 'Approve Payment',
-                               backgroundColor: Colors.green,
-                               textColor: Colors.white,
-                               onPressed: () async {
-                                 await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
-                                 if (context.mounted) Navigator.pop(context);
-                               },
+                       Container(
+                         padding: const EdgeInsets.all(16),
+                         decoration: BoxDecoration(
+                           color: Colors.white,
+                           borderRadius: BorderRadius.circular(12),
+                           border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                         ),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             const Text("Verify Payment", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange)),
+                             const SizedBox(height: 12),
+                             _buildInfoRow("Provider", delivery.paymentProvider ?? "Unknown"),
+                             const SizedBox(height: 8),
+                             _buildInfoRow("Transaction ID", delivery.paymentRef ?? "N/A"),
+                             const SizedBox(height: 12),
+                             if (delivery.paymentScreenshotUrl != null) ...[
+                               const Text("Payment Proof:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                               const SizedBox(height: 8),
+                               GestureDetector(
+                                 onTap: () {
+                                   showDialog(
+                                     context: context,
+                                     builder: (_) => Dialog(
+                                       child: InteractiveViewer(
+                                         child: Image.network(delivery.paymentScreenshotUrl!),
+                                       ),
+                                     ),
+                                   );
+                                 },
+                                 child: ClipRRect(
+                                   borderRadius: BorderRadius.circular(8),
+                                   child: Image.network(
+                                     delivery.paymentScreenshotUrl!,
+                                     height: 200,
+                                     width: double.infinity,
+                                     fit: BoxFit.cover,
+                                     errorBuilder: (ctx, err, stack) => Container(
+                                       height: 100,
+                                       color: Colors.grey[200],
+                                       child: const Center(child: Text("Image Load Failed")),
+                                     ),
+                                   ),
+                                 ),
+                               ),
+                               const SizedBox(height: 16),
+                             ],
+                             Row(
+                               children: [
+                                 Expanded(
+                                   child: CustomButton(
+                                     text: 'Approve',
+                                     backgroundColor: Colors.green,
+                                     textColor: Colors.white,
+                                     onPressed: () async {
+                                       await DeliveryService().updatePaymentStatus(delivery.id, 'approved');
+                                       if (context.mounted) Navigator.pop(context);
+                                     },
+                                   ),
+                                 ),
+                                 const SizedBox(width: 12),
+                                 Expanded(
+                                   child: CustomButton(
+                                     text: 'Reject',
+                                     backgroundColor: Colors.red,
+                                     textColor: Colors.white,
+                                     onPressed: () async {
+                                       await DeliveryService().updatePaymentStatus(delivery.id, 'canceled');
+                                       if (context.mounted) Navigator.pop(context);
+                                     },
+                                   ),
+                                 ),
+                               ],
                              ),
-                           ),
-                           const SizedBox(width: 16),
-                           Expanded(
-                             child: CustomButton(
-                               text: 'Reject Payment',
-                               backgroundColor: Colors.red,
-                               textColor: Colors.white,
-                               onPressed: () async {
-                                 await DeliveryService().updatePaymentStatus(delivery.id, 'canceled'); // or rejected
-                                 if (context.mounted) Navigator.pop(context);
-                               },
-                             ),
-                           ),
-                         ],
+                           ],
+                         ),
                        ),
-                       const SizedBox(height: 16),
+                       const SizedBox(height: 24),
                      ],
+
+                     // Payout Controls
+                     if (showPayoutControls) _buildPayoutSection(context),
+
                      CustomButton(
                         text: 'Force Cancel Order',
                         onPressed: () async {
@@ -260,5 +336,93 @@ class DeliveryDetailsScreen extends StatelessWidget {
         Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: valueColor ?? AppColors.textPrimary)),
       ],
     );
+  }
+
+  Widget _buildPayoutSection(BuildContext context) {
+    if (delivery.expectedDeliveryTime == null || delivery.customerConfirmedAt == null) {
+      return const SizedBox.shrink(); 
+    }
+
+    final expected = delivery.expectedDeliveryTime!;
+    final actual = delivery.customerConfirmedAt!;
+    final basePrice = delivery.price;
+    final diff = expected.difference(actual); // Positive if early, Negative if late
+    
+    double bonus = 0;
+    String note = "On Time (Exact Bill)";
+    Color noteColor = Colors.orange;
+
+    if (diff.inMinutes >= 5) { // Early by 5+ mins
+       bonus = basePrice * 0.10;
+       note = "Early Reward (+10%)";
+       noteColor = Colors.green;
+    } else if (diff.inMinutes < 0) { // Late
+       bonus = -(basePrice * 0.10);
+       note = "Late Penalty (-10%)";
+       noteColor = Colors.red;
+    }
+
+    final totalPayout = basePrice + bonus;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Rider Payout Calculation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 12),
+          _buildInfoRow("Expected Time", _formatTime(expected)),
+          const SizedBox(height: 4),
+          _buildInfoRow("Actual Time", _formatTime(actual)),
+           const SizedBox(height: 8),
+          const Divider(),
+           const SizedBox(height: 8),
+          _buildInfoRow("Base Bill", "ETB ${basePrice.toStringAsFixed(0)}"),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+               Text("Adjustment", style: TextStyle(color: noteColor, fontWeight: FontWeight.bold)),
+               Text(note, style: TextStyle(color: noteColor, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Total Payout", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+              Text("ETB ${totalPayout.toStringAsFixed(0)}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (delivery.riderPaid)
+             Container(
+               width: double.infinity,
+               padding: const EdgeInsets.all(12),
+               decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+               child: const Center(child: Text("PAID", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, letterSpacing: 2))),
+             )
+          else
+            CustomButton(
+              text: "Pay Rider",
+              backgroundColor: AppColors.primary,
+              onPressed: () async {
+                 await DeliveryService().payRider(delivery.id, totalPayout);
+                 if (context.mounted) Navigator.pop(context);
+              },
+            )
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime t) {
+    return "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
   }
 }
