@@ -40,7 +40,7 @@ class AvailableJobsScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Center(
                   child: ActionChip(
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     label: const Text('DEMO: CUSTOMER', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                     onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('customer'),
                     avatar: const Icon(Icons.person, color: AppColors.primary, size: 14),
@@ -134,7 +134,7 @@ class AvailableJobsScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.moped_outlined, size: 80, color: AppColors.textTertiary.withOpacity(0.2)),
+          Icon(Icons.moped_outlined, size: 80, color: AppColors.textTertiary.withValues(alpha: 0.2)),
           const SizedBox(height: 24),
           const Text(
             'No available jobs right now',

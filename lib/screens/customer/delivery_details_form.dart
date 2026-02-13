@@ -177,7 +177,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.error),
                 ),
@@ -228,7 +228,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -239,7 +239,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
            Text(
             'ESTIMATED TOTAL',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 14,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -279,7 +279,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
@@ -308,7 +308,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
       ),
       child: Column(
         children: [
-          Icon(Icons.calculate_outlined, size: 48, color: AppColors.textTertiary.withOpacity(0.3)),
+          Icon(Icons.calculate_outlined, size: 48, color: AppColors.textTertiary.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(
             'Select zones to see pricing',
@@ -352,7 +352,7 @@ class _DeliveryDetailsFormState extends State<DeliveryDetailsForm> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

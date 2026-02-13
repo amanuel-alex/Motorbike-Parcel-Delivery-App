@@ -181,7 +181,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1FDF5),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
