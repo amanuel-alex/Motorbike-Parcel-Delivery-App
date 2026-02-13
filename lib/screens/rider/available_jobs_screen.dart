@@ -118,9 +118,8 @@ class AvailableJobsScreen extends StatelessWidget {
                 pickup: job.pickupAddress,
                 dropoff: job.dropoffAddress,
                 price: 'ETB ${job.price.toStringAsFixed(0)}',
-                distance: 'Nearby', // Mocked distance
-                time: 'Now',
-                showMap: index == 0,
+                packageType: job.packageType,
+                createdAt: job.createdAt,
               ),
             );
           },
@@ -160,9 +159,8 @@ class AvailableJobsScreen extends StatelessWidget {
     required String pickup,
     required String dropoff,
     required String price,
-    required String distance,
-    required String time,
-    bool showMap = false,
+    required String packageType,
+    required DateTime createdAt,
     bool isHighDemand = false,
   }) {
     return Container(
@@ -239,19 +237,39 @@ class AvailableJobsScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '$distance • $time',
-                    style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                    '$packageType • ${_getTimeAgo(createdAt)}',
+                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
-                if (showMap) ...[
-                  const SizedBox(height: 16),
-                  const SafeNetworkImage(
-                    imageUrl: 'https://api.placeholder.com/400/120?text=Job+Map',
-                    height: 120,
-                    width: double.infinity,
-                    borderRadius: 16,
+                const SizedBox(height: 16),
+                Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.05),
+                        Colors.blue.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
                   ),
-                ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildRouteStep(Icons.my_location, 'Pickup', AppColors.primary),
+                      Expanded(
+                        child: Divider(
+                          color: Colors.grey.withOpacity(0.3),
+                          thickness: 1,
+                          indent: 10,
+                          endIndent: 10,
+                        ),
+                      ),
+                      _buildRouteStep(Icons.flag, 'Dropoff', Colors.blue),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
                 CustomButton(
                   text: 'ACCEPT JOB',
@@ -321,6 +339,28 @@ class AvailableJobsScreen extends StatelessWidget {
             fontSize: 10,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
+        ),
+      ],
+    );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inDays > 0) return '${difference.inDays}d ago';
+    if (difference.inHours > 0) return '${difference.inHours}h ago';
+    if (difference.inMinutes > 0) return '${difference.inMinutes}m ago';
+    return 'Just now';
+  }
+
+  Widget _buildRouteStep(IconData icon, String label, Color color) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
         ),
       ],
     );

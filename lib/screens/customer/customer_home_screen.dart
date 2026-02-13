@@ -78,23 +78,106 @@ class CustomerHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  Text(
-                    'Need something\ndelivered today?',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          height: 1.1,
+                  // Hero Banner
+                  Container(
+                    width: double.infinity,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/f-de.webp'),
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
+                      ],
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Send Packages\nAnywhere, Anytime',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: 120,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Book Now', style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                  
                   const SizedBox(height: 24),
-                  CustomButton(
-                    text: 'Send a Parcel',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
-                      );
-                    },
+                  
+                  // Quick Actions Grid
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildServiceCard(
+                          context, 
+                          'Send Parcel', 
+                          Icons.local_shipping_outlined, 
+                          AppColors.primary,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CreateDeliveryScreen()),
+                          )
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildServiceCard(
+                          context, 
+                          'Track Order', 
+                          Icons.location_searching, 
+                          Colors.blue,
+                          () {} // TODO: Implement Tracking Screen
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -280,5 +363,53 @@ class CustomerHomeScreen extends StatelessWidget {
       default:
         return Colors.grey;
     }
+  }
+
+  Widget _buildServiceCard(
+    BuildContext context, 
+    String title, 
+    IconData icon, 
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 100,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
