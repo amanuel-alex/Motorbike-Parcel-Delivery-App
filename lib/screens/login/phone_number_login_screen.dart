@@ -16,7 +16,15 @@ class PhoneNumberLoginScreen extends StatefulWidget {
 class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
+  final PageController _carouselController = PageController();
   bool _isLoading = false;
+  int _currentCarouselPage = 0;
+  
+  // Hero images for carousel
+  final List<String> _heroImages = [
+    'assets/images/f-de.webp',
+    'assets/images/m-de.avif',
+  ];
   
   Country _selectedCountry = Country(
     phoneCode: "251",
@@ -30,6 +38,34 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
     displayNameNoCountryCode: "Ethiopia (ET)",
     e164Key: "251-ET-0",
   );
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-play carousel
+    Future.delayed(const Duration(seconds: 3), _autoPlayCarousel);
+  }
+
+  void _autoPlayCarousel() {
+    if (!mounted) return;
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted || !_carouselController.hasClients) return;
+      final nextPage = (_currentCarouselPage + 1) % _heroImages.length;
+      _carouselController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+      _autoPlayCarousel();
+    });
+  }
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   void _sendOtp() async {
     final phone = _phoneController.text.trim();
@@ -162,76 +198,84 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Enhanced Feature Card with Image Support
+              // Enhanced Carousel with Auto-Play
               Container(
                 width: double.infinity,
                 height: 220,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withOpacity(0.1),
-                      const Color(0xFFFFF9F2),
-                      AppColors.primary.withOpacity(0.05),
-                    ],
-                  ),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Stack(
                   children: [
-                    // Try to load custom image, fallback to icon design
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Image.asset(
-                          'assets/images/delivery_hero.png',
-                          width: double.infinity,
-                          height: 220,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Fallback: Show icon-based design if image not found
-                            return Stack(
-                              children: [
-                                // Decorative Elements
-                                Positioned(
-                                  top: 20,
-                                  right: 20,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      shape: BoxShape.circle,
+                    // Carousel PageView
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: PageView.builder(
+                        controller: _carouselController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentCarouselPage = index;
+                          });
+                        },
+                        itemCount: _heroImages.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.primary.withOpacity(0.1),
+                                  const Color(0xFFFFF9F2),
+                                  AppColors.primary.withOpacity(0.05),
+                                ],
+                              ),
+                            ),
+                            child: Image.asset(
+                              _heroImages[index],
+                              width: double.infinity,
+                              height: 220,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback: Icon-based design
+                                return Stack(
+                                  children: [
+                                    // Decorative Elements
+                                    Positioned(
+                                      top: 20,
+                                      right: 20,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.location_on,
+                                          size: 30,
+                                          color: AppColors.primary.withOpacity(0.3),
+                                        ),
+                                      ),
                                     ),
-                                    child: Icon(
-                                      Icons.location_on,
-                                      size: 30,
-                                      color: AppColors.primary.withOpacity(0.3),
+                                    Positioned(
+                                      top: 40,
+                                      left: 30,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.delivered.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          size: 20,
+                                          color: AppColors.delivered.withOpacity(0.4),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 40,
-                                  left: 30,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.delivered.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      size: 20,
-                                      color: AppColors.delivered.withOpacity(0.4),
-                                    ),
-                                  ),
-                                ),
-                                // Main Illustration
-                                Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
+                                    // Main Icon
+                                    Center(
+                                      child: Container(
                                         padding: const EdgeInsets.all(24),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -250,74 +294,44 @@ class _PhoneNumberLoginScreenState extends State<PhoneNumberLoginScreen> {
                                           color: AppColors.primary,
                                         ),
                                       ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    // Info Card (Always visible)
+                    // Page Indicators
                     Positioned(
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.flash_on, size: 12, color: AppColors.primary),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'FASTEST IN EAST AFRICA',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                      top: 12,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              _heroImages.length,
+                              (index) => Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                width: _currentCarouselPage == index ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentCarouselPage == index
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Reliable parcel delivery at your doorstep.',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
