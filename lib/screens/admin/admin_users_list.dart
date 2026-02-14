@@ -160,6 +160,10 @@ class AdminUsersListScreen extends StatelessWidget {
   }
 
   void _handleDeleteUser(BuildContext context, Map<String, dynamic> user) async {
+    if (!await showConfirmationDialog(context, "Delete User", "Are you sure you want to delete this user? This action can be undone immediately via the snackbar.")) {
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     final uid = user['uid'] as String;
     

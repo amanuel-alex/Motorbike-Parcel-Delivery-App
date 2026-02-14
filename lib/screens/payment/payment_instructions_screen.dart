@@ -278,6 +278,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Demo Samples: TX-88294021-AF (Auto-Approve), TX-99002233-CB',
+                      style: TextStyle(fontSize: 10, color: AppColors.textTertiary, fontStyle: FontStyle.italic),
+                    ),
                     const SizedBox(height: 20),
                     const Text(
                       'Payment Screenshot (Highly Recommended)',

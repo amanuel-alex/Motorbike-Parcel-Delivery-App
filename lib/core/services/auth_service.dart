@@ -111,4 +111,64 @@ class AuthService {
   Future<void> deleteUser(String uid) async {
     await _firestore.collection('users').doc(uid).delete();
   }
+
+  // --- Saved Addresses Management ---
+  Future<void> addSavedAddress(String uid, Map<String, dynamic> address) async {
+    await _firestore.collection('users').doc(uid).collection('addresses').add(address);
+  }
+
+  Stream<List<Map<String, dynamic>>> getSavedAddresses(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  Future<void> deleteSavedAddress(String uid, String addressId) async {
+    await _firestore.collection('users').doc(uid).collection('addresses').doc(addressId).delete();
+  }
+
+  // --- Notifications ---
+  Stream<List<Map<String, dynamic>>> getNotifications(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return data;
+            }).toList());
+  }
+
+  Future<void> addNotification(String uid, Map<String, dynamic> notification) async {
+    notification['timestamp'] = FieldValue.serverTimestamp();
+    await _firestore.collection('users').doc(uid).collection('notifications').add(notification);
+  }
+
+  // --- Payment Methods ---
+  Future<void> updateLinkedPaymentMethods(String uid, List<String> methods) async {
+    await _firestore.collection('users').doc(uid).set({
+      'linkedPayments': methods,
+    }, SetOptions(merge: true));
+  }
+
+  Stream<List<String>> getLinkedPaymentMethods(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data() as Map<String, dynamic>;
+        final List<dynamic> list = data['linkedPayments'] ?? [];
+        return list.map((e) => e.toString()).toList();
+      }
+      return [];
+    });
+  }
 }

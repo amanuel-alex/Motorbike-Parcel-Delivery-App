@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/common_widgets.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -28,21 +29,21 @@ class HelpSupportScreen extends StatelessWidget {
               Icons.chat_outlined,
               'Live Chat',
               'Chat with our support team',
-              () {},
+              () => _showComingSoon(context, 'Live Chat'),
             ),
             const SizedBox(height: 16),
             _buildContactCard(
               Icons.phone_outlined,
               'Phone Support',
               '+251 911 000 000',
-              () {},
+              () => _showComingSoon(context, 'Phone Support'),
             ),
             const SizedBox(height: 16),
             _buildContactCard(
-              Icons.email_outlined,
-              'Email Support',
-              'support@zippandgo.com',
-              () {},
+              Icons.report_problem_outlined,
+              'Report a Problem',
+              'Tell us what went wrong',
+              () => _showReportDialog(context),
             ),
             const SizedBox(height: 32),
             const Text(
@@ -53,8 +54,49 @@ class HelpSupportScreen extends StatelessWidget {
             _buildFaqItem('How do I track my order?', 'You can track your order in real-time from the "Activity" tab.'),
             _buildFaqItem('What are the delivery hours?', 'We operate 24/7 across all major zones in Addis Ababa.'),
             _buildFaqItem('How is pricing calculated?', 'Pricing is based on the distance between pickup and dropoff zones.'),
+            _buildFaqItem('Can I cancel an order?', 'Yes, you can cancel a pending order from the order details screen before it is accepted by a rider.'),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$feature will be available soon!')),
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Report a Problem'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: 'Describe the issue...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Thank you! Our support team will investigate.')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Submit'),
+          ),
+        ],
       ),
     );
   }
@@ -79,14 +121,15 @@ class HelpSupportScreen extends StatelessWidget {
               child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                ],
+              ),
             ),
-            const Spacer(),
             const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),

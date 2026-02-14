@@ -383,6 +383,10 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
   }
 
   void _handleDeleteZone(BuildContext context, Map<String, dynamic> zone) async {
+    if (!await showConfirmationDialog(context, "Delete Zone", "Are you sure you want to delete '${zone['name']}'?")) {
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     final id = zone['id'] as String;
     
@@ -404,6 +408,10 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
   }
 
   void _handleDeletePrice(BuildContext context, Map<String, dynamic> price) async {
+    if (!await showConfirmationDialog(context, "Delete Price Rule", "Are you sure you want to delete this pricing rule?")) {
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     final id = price['id'] as String;
     

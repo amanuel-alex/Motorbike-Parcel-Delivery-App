@@ -152,6 +152,13 @@ class _CreateDeliveryScreenState extends State<CreateDeliveryScreen> {
 
       final String deliveryId = await _deliveryService.createDelivery(delivery);
       
+      // Notify customer (Real persistence)
+      await _authService.addNotification(delivery.customerId, {
+        'title': 'Delivery Requested',
+        'body': 'Your order to ${selectedDropZone} is pending payment verification.',
+        'icon': 'location_on',
+      });
+
       if (!mounted) return;
       
       // Navigate to Payment instructions as required

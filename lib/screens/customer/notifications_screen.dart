@@ -1,32 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/auth_service.dart';
+import '../../providers/auth_provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Sample notifications data
-    final List<Map<String, String>> notifications = [
-      {
-        'title': 'Delivery Accepted',
-        'body': 'A rider has accepted your delivery request to Bole.',
-        'time': '2 mins ago',
-        'icon': 'check_circle',
-      },
-      {
-        'title': 'Payment Verified',
-        'body': 'Your payment for Order #1234 has been successfully verified.',
-        'time': '1 hour ago',
-        'icon': 'payments',
-      },
-      {
-        'title': 'New Feature: Zone Pricing',
-        'body': 'You can now see exact pricing for different zones in Addis!',
-        'time': '2 days ago',
-        'icon': 'location_on',
-      },
-    ];
+    final uid = Provider.of<AuthProvider>(context).user?.uid ?? 'demo_guest_id';
+    final AuthService authService = AuthService();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
@@ -36,8 +21,17 @@ class NotificationsScreen extends StatelessWidget {
         elevation: 0,
         leading: const BackButton(color: AppColors.textPrimary),
       ),
-      body: notifications.isEmpty
-          ? Center(
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: authService.getNotifications(uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final notifications = snapshot.data ?? [];
+
+          if (notifications.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -46,43 +40,50 @@ class NotificationsScreen extends StatelessWidget {
                   const Text('No notifications yet', style: TextStyle(color: Colors.grey)),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                final item = notifications[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _getIconData(item['icon']!),
-                        color: AppColors.primary,
-                      ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              final item = notifications[index];
+              final DateTime? time = item['timestamp'] != null ? (item['timestamp'] as dynamic).toDate() : null;
+              final String timeStr = time != null ? timeago.format(time) : 'Just now';
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                    title: Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(item['body']!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                        const SizedBox(height: 8),
-                        Text(item['time']!, style: const TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-                      ],
+                    child: Icon(
+                      _getIconData(item['icon'] ?? 'notifications'),
+                      color: AppColors.primary,
                     ),
                   ),
-                );
-              },
-            ),
+                  title: Text(item['title'] ?? 'Notification', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(item['body'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      Text(timeStr, style: const TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
