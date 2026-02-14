@@ -44,6 +44,7 @@ dependencies:
   country_picker: ^2.0.27
   image_picker: ^1.2.1
   firebase_storage: ^13.0.6
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:

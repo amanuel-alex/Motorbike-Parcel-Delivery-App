@@ -9,10 +9,6 @@ import '../../core/services/auth_service.dart';
 import 'create_delivery_screen.dart';
 import 'delivery_details_screen.dart';
 import 'order_chat_screen.dart';
-import 'saved_addresses_screen.dart';
-import 'payment_methods_screen.dart';
-import 'notifications_screen.dart';
-import 'help_support_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -100,6 +96,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (AuthService.isDemoMode)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    child: ActionChip(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      label: const Text('DEMO: SWITCH TO RIDER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('rider'),
+                      avatar: const Icon(Icons.moped, color: Colors.white, size: 14),
+                    ),
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -132,12 +138,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-                          );
-                        },
+                        onPressed: () {},
                       ),
                     ),
                   ],
@@ -457,10 +458,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedAddressesScreen()))),
-                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()))),
-                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()))),
-                  _buildProfileOption(Icons.help_outline, 'Help & Support', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()))),
+                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () => _showPlaceholder(context, 'Saved Addresses')),
+                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () => _showPlaceholder(context, 'Payment Methods')),
+                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () => _showPlaceholder(context, 'Notifications')),
+                  _buildProfileOption(Icons.help_outline, 'Help & Support', () => _showPlaceholder(context, 'Help & Support')),
                   const SizedBox(height: 24),
                   _buildProfileOption(
                     Icons.logout, 

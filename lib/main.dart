@@ -1,28 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth_wrapper.dart';
-import 'screens/splash/splash_screen.dart';
-import 'screens/design_gallery_screen.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -30,15 +19,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Zipp&Go',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(), 
-      routes: {
-        '/gallery': (context) => const DesignGalleryScreen(),
-        '/auth': (context) => const AuthWrapper(),
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Motorbike Parcel Delivery App',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primaryColor: const Color(0xFFFF9900),
+          useMaterial3: true,
+          textTheme: GoogleFonts.manropeTextTheme(Theme.of(context).textTheme),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFFF9900),
+            primary: const Color(0xFFFF9900),
+          ),
+        ),
+        home: const AuthWrapper(),
+        routes: {
+          '/auth': (context) => const AuthWrapper(),
+        },
+      ),
     );
   }
 }

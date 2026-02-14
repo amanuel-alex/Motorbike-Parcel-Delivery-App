@@ -114,10 +114,12 @@ class DeliveryService {
     return _firestore
         .collection('deliveries')
         .where('status', isEqualTo: 'pending')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final list = snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   // Get My Deliveries for Customer
