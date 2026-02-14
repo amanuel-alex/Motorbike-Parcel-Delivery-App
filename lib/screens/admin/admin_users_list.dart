@@ -80,27 +80,46 @@ class AdminUsersListScreen extends StatelessWidget {
         final role = user['role'] ?? 'unknown';
         final phone = user['phoneNumber'] ?? 'Unknown';
         
+        final status = user['status'] ?? 'active';
+        final isDeactivated = status == 'deactivated';
+        
         return Card(
           elevation: 0,
           color: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE2E8F0))),
           child: ListTile(
+            onLongPress: () async {
+               final action = isDeactivated ? "Activate" : "Deactivate";
+               if (await showConfirmationDialog(context, "$action User", "Are you sure you want to $action this user?")) {
+                  await AuthService().updateUserStatus(user['uid'], isDeactivated ? 'active' : 'deactivated');
+               }
+            },
             leading: CircleAvatar(
               backgroundColor: _getRoleColor(role).withOpacity(0.1),
               child: Icon(_getRoleIcon(role), color: _getRoleColor(role)),
             ),
             title: Text(phone, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('Role: ${role.toUpperCase()}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Role: ${role.toUpperCase()}'),
+                if (role == 'rider') 
+                  Text(
+                    'Jobs: ${user['completedDeliveries'] ?? 0} Done / ${user['totalDeliveries'] ?? 0} Total',
+                    style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold),
+                  ),
+              ],
+            ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: (user['status'] == 'active' ? Colors.green : Colors.red).withOpacity(0.1),
+                color: (!isDeactivated ? Colors.green : Colors.red).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                user['status']?.toUpperCase() ?? 'ACTIVE',
+                status.toUpperCase(),
                 style: TextStyle(
-                  color: user['status'] == 'active' ? Colors.green : Colors.red,
+                  color: !isDeactivated ? Colors.green : Colors.red,
                   fontWeight: FontWeight.bold,
                   fontSize: 10,
                 ),

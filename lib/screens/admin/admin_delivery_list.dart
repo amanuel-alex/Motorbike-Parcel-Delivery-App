@@ -7,66 +7,131 @@ import '../../providers/auth_provider.dart';
 import '../../core/widgets/common_widgets.dart';
 
 
-class AdminDeliveryListScreen extends StatelessWidget {
+class AdminDeliveryListScreen extends StatefulWidget {
   const AdminDeliveryListScreen({super.key});
+
+  @override
+  State<AdminDeliveryListScreen> createState() => _AdminDeliveryListScreenState();
+}
+
+class _AdminDeliveryListScreenState extends State<AdminDeliveryListScreen> {
+  String _selectedFilter = 'All';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const Text('Manage Deliveries', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: const SizedBox.shrink(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showLogoutDialog(context);
-            },
+            icon: const Icon(Icons.logout, color: Colors.black),
+            onPressed: () => showLogoutDialog(context),
           ),
         ],
       ),
       backgroundColor: const Color(0xFFF8F9FB),
-      body: StreamBuilder<List<Delivery>>(
-        stream: DeliveryService().getAllDeliveries(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-             return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final deliveries = snapshot.data ?? [];
+      body: Column(
+        children: [
+          // Filter & Search Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.white,
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Search package or ID...",
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: const Color(0xFFF1F5F9),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: ['All', 'pending', 'accepted', 'picked', 'completed', 'canceled'].map((status) {
+                      final isSelected = _selectedFilter == status;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.black)),
+                          selected: isSelected,
+                          selectedColor: _getStatusColor(status),
+                          onSelected: (selected) {
+                            setState(() => _selectedFilter = status);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
           
-          if (deliveries.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.inbox, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text("No active deliveries found", style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
-          }
+          Expanded(
+            child: StreamBuilder<List<Delivery>>(
+              stream: DeliveryService().getAllDeliveries(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                var deliveries = snapshot.data ?? [];
+                
+                // Filter by status
+                if (_selectedFilter != 'All') {
+                  deliveries = deliveries.where((d) => d.status == _selectedFilter).toList();
+                }
+                
+                // Filter by search
+                if (_searchQuery.isNotEmpty) {
+                  deliveries = deliveries.where((d) => 
+                    d.packageType.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    d.id.toLowerCase().contains(_searchQuery.toLowerCase())
+                  ).toList();
+                }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: deliveries.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final delivery = deliveries[index];
-              return _buildAdminDeliveryCard(context, delivery);
-            },
-          );
-        },
+                if (deliveries.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.inbox, size: 48, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text("No matching deliveries found", style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: deliveries.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final delivery = deliveries[index];
+                    return _buildAdminDeliveryCard(context, delivery);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildAdminDeliveryCard(BuildContext context, Delivery delivery) {
-    final bool isPaymentPending = delivery.paymentStatus == 'pending';
-    
     return Card(
       elevation: 0,
       color: Colors.white,

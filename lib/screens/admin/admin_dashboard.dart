@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/auth_provider.dart';
+import 'admin_dashboard_summary.dart';
 import 'admin_delivery_list.dart';
 import 'admin_users_list.dart';
 import 'admin_zones_screen.dart';
-
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,10 +14,11 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const AdminDeliveryListScreen(), // Index 0: Deliveries
-    const AdminUsersListScreen(), // Index 1: Users
-    const AdminZonesScreen(), // Index 2: Zones
+  late final List<Widget> _pages = [
+    AdminDashboardSummary(onTabChange: (index) => setState(() => _currentIndex = index)), // Index 0: Overview
+    const AdminDeliveryListScreen(), // Index 1: Deliveries
+    const AdminUsersListScreen(), // Index 2: Users
+    const AdminZonesScreen(), // Index 3: Zones
   ];
 
   @override
@@ -30,7 +28,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Summary'),
           BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Deliveries'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Zones'),

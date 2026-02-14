@@ -100,4 +100,10 @@ class AuthService {
     if (_auth.currentUser != null) return _auth.currentUser!.uid;
     return isDemoMode ? 'demo_guest_id' : 'unknown_user';
   }
+  // Update user status (Admin)
+  Future<void> updateUserStatus(String uid, String status) async {
+    await _firestore.collection('users').doc(uid).update({
+      'status': status,
+    });
+  }
 }

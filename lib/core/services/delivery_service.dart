@@ -125,10 +125,13 @@ class DeliveryService {
     return _firestore
         .collection('deliveries')
         .where('customerId', isEqualTo: customerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final docs = snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList();
+          // Sort in-memory to maintain reverse chronological order without index requirement
+          docs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return docs;
+        });
   }
 
   // Rider Job Concurrency Protection (Transaction)
@@ -151,6 +154,12 @@ class DeliveryService {
           {'type': 'accepted', 'at': Timestamp.now()}
         ]),
       });
+
+      // Update Rider Stats
+      transaction.update(_firestore.collection('users').doc(riderId), {
+        'totalDeliveries': FieldValue.increment(1),
+      });
+
       return true;
     });
   }
@@ -169,14 +178,28 @@ class DeliveryService {
 
   // Professional Status Machine: Mark as Completed
   Future<void> confirmDelivery(String deliveryId, String photoUrl) async {
-    await _firestore.collection('deliveries').doc(deliveryId).update({
-      'status': 'completed',
-      'dropoffPhotoUrl': photoUrl,
-      'dropUploadedAt': FieldValue.serverTimestamp(),
-      'events': FieldValue.arrayUnion([
-        {'type': 'completed', 'at': Timestamp.now()}
-      ]),
+    return await _firestore.runTransaction((transaction) async {
+      DocumentReference delRef = _firestore.collection('deliveries').doc(deliveryId);
+      DocumentSnapshot delSnap = await transaction.get(delRef);
+      
+      if (!delSnap.exists) return;
+      
+      final riderId = delSnap.get('riderId');
+      
+      transaction.update(delRef, {
+        'status': 'completed',
+        'dropoffPhotoUrl': photoUrl,
+        'dropUploadedAt': FieldValue.serverTimestamp(),
+        'events': FieldValue.arrayUnion([
+          {'type': 'completed', 'at': Timestamp.now()}
+        ]),
+      });
 
+      if (riderId != null) {
+        transaction.update(_firestore.collection('users').doc(riderId as String), {
+          'completedDeliveries': FieldValue.increment(1),
+        });
+      }
     });
   }
 
@@ -218,6 +241,15 @@ class DeliveryService {
             snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
   }
 
+  // Get Deliveries for a specific Rider
+  Stream<List<Delivery>> getRiderDeliveries(String riderId) {
+    return _firestore.collection('deliveries')
+        .where('riderId', isEqualTo: riderId)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList());
+  }
+
   // Cancel Delivery (Customer/Admin)
   Future<void> cancelDelivery(String deliveryId) async {
     await _firestore.collection('deliveries').doc(deliveryId).update({
@@ -235,6 +267,36 @@ class DeliveryService {
       'events': FieldValue.arrayUnion([
         {'type': 'price_updated', 'at': Timestamp.now(), 'newPrice': newPrice}
       ]),
+    });
+  }
+
+  // --- ADMIN DASHBOARD ---
+
+  Stream<Map<String, dynamic>> getAdminStats() {
+    return _firestore.collection('deliveries').snapshots().asyncMap((deliverySnapshot) async {
+      final userSnapshot = await _firestore.collection('users').get();
+      
+      final deliveries = deliverySnapshot.docs.map((doc) => Delivery.fromFirestore(doc)).toList();
+      final users = userSnapshot.docs;
+      
+      final pendingCount = deliveries.where((d) => d.status == 'pending').length;
+      final completedCount = deliveries.where((d) => d.status == 'completed').length;
+      final riderCount = users.where((u) => u.data()['role'] == 'rider').length;
+      final customerCount = users.where((u) => u.data()['role'] == 'customer').length;
+      
+      double totalRevenue = 0;
+      for (var d in deliveries) {
+        if (d.status == 'completed') totalRevenue += d.price;
+      }
+      
+      return {
+        'totalDeliveries': deliveries.length,
+        'pendingDeliveries': pendingCount,
+        'completedDeliveries': completedCount,
+        'totalRiders': riderCount,
+        'totalCustomers': customerCount,
+        'totalRevenue': totalRevenue,
+      };
     });
   }
 
@@ -269,8 +331,30 @@ class DeliveryService {
         'pickup': pickup,
         'dropoff': dropoff,
         'price': price,
+        'createdAt': FieldValue.serverTimestamp(),
       });
     }
+  }
+
+  // Get Price Rules (Admin)
+  Stream<List<Map<String, dynamic>>> getZonePricesStream() {
+    return _firestore.collection('ZonePrices').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    });
+  }
+
+  // Update Price Rule
+  Future<void> updateZonePrice(String id, double price) async {
+    await _firestore.collection('ZonePrices').doc(id).update({'price': price});
+  }
+
+  // Delete Price Rule
+  Future<void> deleteZonePrice(String id) async {
+    await _firestore.collection('ZonePrices').doc(id).delete();
   }
 
   // Request New Zone (Customer)

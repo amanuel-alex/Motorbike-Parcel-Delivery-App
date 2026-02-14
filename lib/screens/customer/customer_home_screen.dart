@@ -9,6 +9,10 @@ import '../../core/services/auth_service.dart';
 import 'create_delivery_screen.dart';
 import 'delivery_details_screen.dart';
 import 'order_chat_screen.dart';
+import 'saved_addresses_screen.dart';
+import 'payment_methods_screen.dart';
+import 'notifications_screen.dart';
+import 'help_support_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -96,16 +100,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (AuthService.isDemoMode)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    child: ActionChip(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      label: const Text('DEMO: SWITCH TO RIDER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                      onPressed: () => Provider.of<AuthProvider>(context, listen: false).setRole('rider'),
-                      avatar: const Icon(Icons.moped, color: Colors.white, size: 14),
-                    ),
-                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -138,7 +132,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -286,15 +285,26 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
                     }
 
-                    final deliveries = snapshot.data ?? [];
+                    final allDeliveries = snapshot.data ?? [];
+                    // Only show Active ones on Home for better focus
+                    final activeDeliveries = allDeliveries.where((d) => d.status != 'completed' && d.status != 'canceled').toList();
 
-                    if (deliveries.isEmpty) {
+                    if (activeDeliveries.isEmpty && allDeliveries.isNotEmpty) {
+                       return const Center(
+                         child: Padding(
+                           padding: EdgeInsets.symmetric(vertical: 20),
+                           child: Text('No active orders. Check "Activity" for history.', style: TextStyle(color: AppColors.textTertiary, fontSize: 13)),
+                         ),
+                       );
+                    }
+
+                    if (allDeliveries.isEmpty) {
                       return _buildEmptyState();
                     }
 
                     // Show only first 3 on home screen
                     return Column(
-                      children: deliveries.take(3).map((d) => Padding(
+                      children: activeDeliveries.take(3).map((d) => Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: _buildDeliveryCard(d),
                       )).toList(),
@@ -311,38 +321,73 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   }
 
   Widget _buildActivityView(BuildContext context, DeliveryService deliveryService, dynamic user) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('My Activity', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
+        appBar: AppBar(
+          title: const Text('My Activity', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          bottom: const TabBar(
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textTertiary,
+            indicatorColor: AppColors.primary,
+            tabs: [
+              Tab(text: 'Active'),
+              Tab(text: 'History'),
+            ],
+          ),
+        ),
+        body: StreamBuilder<List<Delivery>>(
+          stream: deliveryService.getCustomerDeliveries(user?.uid ?? ''),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            }
+  
+            final deliveries = snapshot.data ?? [];
+            final activeDeliveries = deliveries.where((d) => d.status != 'completed' && d.status != 'canceled').toList();
+            final pastDeliveries = deliveries.where((d) => d.status == 'completed' || d.status == 'canceled').toList();
+  
+            if (deliveries.isEmpty) {
+              return Center(child: _buildEmptyState());
+            }
+  
+            return TabBarView(
+              children: [
+                _buildOrderList(activeDeliveries, 'No active orders'),
+                _buildOrderList(pastDeliveries, 'No order history'),
+              ],
+            );
+          },
+        ),
       ),
-      body: StreamBuilder<List<Delivery>>(
-        stream: deliveryService.getCustomerDeliveries(user?.uid ?? ''),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-          }
+    );
+  }
 
-          final deliveries = snapshot.data ?? [];
-
-          if (deliveries.isEmpty) {
-            return Center(child: _buildEmptyState());
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: deliveries.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              return _buildDeliveryCard(deliveries[index]);
-            },
-          );
-        },
-      ),
+  Widget _buildOrderList(List<Delivery> items, String emptyMsg) {
+    if (items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history_toggle_off, size: 64, color: Colors.grey[200]),
+            const SizedBox(height: 16),
+            Text(emptyMsg, style: const TextStyle(color: AppColors.textTertiary)),
+          ],
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: items.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        return _buildDeliveryCard(items[index]);
+      },
     );
   }
 
@@ -412,10 +457,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () => _showPlaceholder(context, 'Saved Addresses')),
-                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () => _showPlaceholder(context, 'Payment Methods')),
-                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () => _showPlaceholder(context, 'Notifications')),
-                  _buildProfileOption(Icons.help_outline, 'Help & Support', () => _showPlaceholder(context, 'Help & Support')),
+                  _buildProfileOption(Icons.location_on_outlined, 'Saved Addresses', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedAddressesScreen()))),
+                  _buildProfileOption(Icons.payment_outlined, 'Payment Methods', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()))),
+                  _buildProfileOption(Icons.notifications_outlined, 'Notifications', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()))),
+                  _buildProfileOption(Icons.help_outline, 'Help & Support', () => Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()))),
                   const SizedBox(height: 24),
                   _buildProfileOption(
                     Icons.logout, 

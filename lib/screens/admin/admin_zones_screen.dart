@@ -33,11 +33,11 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('Zone Management', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('Ops Management', style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
           elevation: 0,
           leading: const SizedBox.shrink(),
@@ -51,9 +51,11 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
              labelColor: AppColors.primary,
              unselectedLabelColor: Colors.grey,
              indicatorColor: AppColors.primary,
+             isScrollable: true,
              tabs: [
                Tab(text: "Pending Requests"),
                Tab(text: "Active Zones"),
+               Tab(text: "Route Pricing"),
              ],
           ),
         ),
@@ -61,6 +63,7 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
           children: [
             _buildRequestsTab(context),
             _buildZonesTab(context),
+            _buildPricingTab(context),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -105,7 +108,7 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
                 side: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               child: ListTile(
-                title: Text(req['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(req['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text("Requested: ${(req['requestedAt'] as dynamic)?.toDate().toString().split('.')[0] ?? 'Now'}"),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -173,7 +176,6 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
               
               final List<String> allZones = combined.toList()..sort();
               
-              // Filter
               final filteredZones = allZones.where((zone) => 
                 zone.toLowerCase().contains(_searchQuery.toLowerCase())
               ).toList();
@@ -213,6 +215,53 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
     );
   }
 
+  Widget _buildPricingTab(BuildContext context) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: DeliveryService().getZonePricesStream(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        
+        final prices = snapshot.data!;
+        if (prices.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.payments_outlined, size: 64, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                const Text("No pricing rules set", style: TextStyle(color: Colors.grey)),
+                TextButton(onPressed: () => _showAddPriceDialog(context), child: const Text("Add First Rule")),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: prices.length,
+          itemBuilder: (context, index) {
+            final price = prices[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE2E8F0))),
+              child: ListTile(
+                title: Text("${price['pickup']} → ${price['dropoff']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Price: ETB ${price['price']}", style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showEditPriceDialog(context, price)),
+                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => DeliveryService().deleteZonePrice(price['id'])),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAddZoneDialog(BuildContext context) {
     final controller = TextEditingController();
     showDialog(
@@ -229,13 +278,94 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
               if (controller.text.isNotEmpty) {
-                // Check if already exists? Service handles duplicates but silently.
                 await DeliveryService().addZone(controller.text.trim());
                 if (context.mounted) Navigator.pop(context);
               }
             },
             child: const Text("Add"),
           )
+        ],
+      ),
+    );
+  }
+
+  void _showAddPriceDialog(BuildContext context) async {
+    final zones = await DeliveryService().getZones();
+    if (zones.length < 2) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Add more zones first")));
+      return;
+    }
+
+    String? pickup = zones[0];
+    String? dropoff = zones[1];
+    final priceController = TextEditingController();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Add Price Rule"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: pickup,
+                items: zones.map((z) => DropdownMenuItem(value: z, child: Text(z))).toList(),
+                onChanged: (v) => setDialogState(() => pickup = v),
+                decoration: const InputDecoration(labelText: "From"),
+              ),
+              DropdownButtonFormField<String>(
+                value: dropoff,
+                items: zones.map((z) => DropdownMenuItem(value: z, child: Text(z))).toList(),
+                onChanged: (v) => setDialogState(() => dropoff = v),
+                decoration: const InputDecoration(labelText: "To"),
+              ),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Price (ETB)"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                if (pickup != null && dropoff != null && priceController.text.isNotEmpty) {
+                  await DeliveryService().addZonePrice(pickup!, dropoff!, double.parse(priceController.text));
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditPriceDialog(BuildContext context, Map<String, dynamic> price) {
+    final controller = TextEditingController(text: price['price'].toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Price"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "New Price"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              await DeliveryService().updateZonePrice(price['id'], double.parse(controller.text));
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text("Update"),
+          ),
         ],
       ),
     );
