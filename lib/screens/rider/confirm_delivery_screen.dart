@@ -6,6 +6,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/services/storage_service.dart';
 import 'earnings_dashboard_screen.dart';
+import '../customer/order_chat_screen.dart';
 
 class ConfirmDeliveryScreen extends StatefulWidget {
   final String orderId;
@@ -108,6 +109,17 @@ class _ConfirmDeliveryScreenState extends State<ConfirmDeliveryScreen> {
         elevation: 0,
         title: const Text('Stage 2: Confirm Delivery', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_outlined, color: AppColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => OrderChatScreen(deliveryId: widget.orderId, title: "Chat with Customer")),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

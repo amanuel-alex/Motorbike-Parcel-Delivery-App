@@ -18,6 +18,31 @@ class _AdminDeliveryListScreenState extends State<AdminDeliveryListScreen> {
   String _selectedFilter = 'All';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final DeliveryService _deliveryService = DeliveryService();
+
+  Future<void> _handleDeleteDelivery(BuildContext context, Delivery delivery) async {
+    if (!await showConfirmationDialog(context, "Delete Delivery", "Are you sure you want to delete this delivery? This action can be undone immediately via the snackbar.")) {
+      return;
+    }
+    
+    final messenger = ScaffoldMessenger.of(context);
+    
+    // Immediate Delete
+    await _deliveryService.deleteDelivery(delivery.id);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text("${delivery.packageType} deleted"),
+        action: SnackBarAction(
+          label: "UNDO",
+          onPressed: () async {
+            // Restore: re-create the delivery with same ID and data
+            await _deliveryService.restoreDelivery(delivery);
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +184,14 @@ class _AdminDeliveryListScreenState extends State<AdminDeliveryListScreen> {
           children: [
             Text(delivery.packageType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Spacer(),
-             Text('ETB ${delivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+            Text('ETB ${delivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              onPressed: () => _handleDeleteDelivery(context, delivery),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
           ],
         ),
         subtitle: Column(

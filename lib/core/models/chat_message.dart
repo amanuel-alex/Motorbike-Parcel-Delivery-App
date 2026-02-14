@@ -6,7 +6,7 @@ class ChatMessage {
   final String senderName;
   final String message;
   final DateTime timestamp;
-  final bool isAdmin;
+  final String senderRole; // customer, rider, admin
 
   ChatMessage({
     required this.id,
@@ -14,7 +14,7 @@ class ChatMessage {
     required this.senderName,
     required this.message,
     required this.timestamp,
-    required this.isAdmin,
+    required this.senderRole,
   });
 
   factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
@@ -25,7 +25,7 @@ class ChatMessage {
       senderName: data['senderName'] ?? 'Unknown',
       message: data['message'] ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isAdmin: data['isAdmin'] ?? false,
+      senderRole: data['senderRole'] ?? (data['isAdmin'] == true ? 'admin' : 'customer'),
     );
   }
 
@@ -35,7 +35,7 @@ class ChatMessage {
       'senderName': senderName,
       'message': message,
       'timestamp': FieldValue.serverTimestamp(),
-      'isAdmin': isAdmin,
+      'senderRole': senderRole,
     };
   }
 }

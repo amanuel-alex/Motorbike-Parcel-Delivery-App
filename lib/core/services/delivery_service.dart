@@ -38,9 +38,13 @@ class DeliveryService {
   }
 
   // Get streaming list of available zones
-  Stream<List<String>> getZonesStream() {
+  Stream<List<Map<String, dynamic>>> getZonesStream() {
     return _firestore.collection('Zones').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()['name'] as String).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
     });
   }
 
@@ -262,6 +266,11 @@ class DeliveryService {
     });
   }
 
+  // Delete Delivery (Admin)
+  Future<void> deleteDelivery(String deliveryId) async {
+    await _firestore.collection('deliveries').doc(deliveryId).delete();
+  }
+
   // Update Delivery Price (Admin Override)
   Future<void> updateDeliveryPrice(String deliveryId, double newPrice) async {
     await _firestore.collection('deliveries').doc(deliveryId).update({
@@ -314,6 +323,11 @@ class DeliveryService {
       'name': zoneName,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // Delete Zone (Admin)
+  Future<void> deleteZone(String zoneId) async {
+    await _firestore.collection('Zones').doc(zoneId).delete();
   }
 
   // Add Price Rule
@@ -411,5 +425,10 @@ class DeliveryService {
         .map((snapshot) => snapshot.docs
             .map((doc) => ChatMessage.fromFirestore(doc))
             .toList());
+  }
+
+  // Restore a deleted delivery (Admin Undo)
+  Future<void> restoreDelivery(Delivery delivery) async {
+    await _firestore.collection('deliveries').doc(delivery.id).set(delivery.toMap());
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -110,20 +111,29 @@ class AdminUsersListScreen extends StatelessWidget {
                   ),
               ],
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: (!isDeactivated ? Colors.green : Colors.red).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                status.toUpperCase(),
-                style: TextStyle(
-                  color: !isDeactivated ? Colors.green : Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: (!isDeactivated ? Colors.green : Colors.red).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: TextStyle(
+                      color: !isDeactivated ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
+                  onPressed: () => _handleDeleteUser(context, user),
+                ),
+              ],
             ),
           ),
         );
@@ -147,5 +157,28 @@ class AdminUsersListScreen extends StatelessWidget {
       case 'admin': return Icons.admin_panel_settings;
       default: return Icons.help;
     }
+  }
+
+  void _handleDeleteUser(BuildContext context, Map<String, dynamic> user) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final uid = user['uid'] as String;
+    
+    // Immediate Delete
+    await AuthService().deleteUser(uid);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text("User ${user['phoneNumber'] ?? ''} deleted"),
+        action: SnackBarAction(
+          label: "UNDO",
+          onPressed: () async {
+            // Restore user record
+            final data = Map<String, dynamic>.from(user);
+            data.remove('uid'); // ID is the document ID
+            await FirebaseFirestore.instance.collection('users').doc(uid).set(data);
+          },
+        ),
+      ),
+    );
   }
 }

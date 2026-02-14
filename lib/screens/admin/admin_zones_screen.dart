@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -160,18 +161,22 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
           ),
         ),
         Expanded(
-          child: StreamBuilder<List<String>>(
+          child: StreamBuilder<List<Map<String, dynamic>>>(
             stream: DeliveryService().getZonesStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
               
-              final dbZones = snapshot.data ?? [];
-              final Set<String> combined = {};
-              combined.addAll([
+              final dbZoneData = snapshot.data ?? [];
+              final dbZones = dbZoneData.map((z) => z['name'] as String).toList();
+              
+              final Set<String> systemDefaults = {
                 'Bole', 'Kirkos', 'Arada', 'Lideta', 'Yeka', 'Nifas Silk-Lafto', 'Akaki Kality', 'Addis Ketema', 'Gullele', 'Kolfe Keranio'
-              ]);
+              };
+              
+              final Set<String> combined = {};
+              combined.addAll(systemDefaults);
               combined.addAll(dbZones);
               
               final List<String> allZones = combined.toList()..sort();
@@ -190,7 +195,9 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
                 separatorBuilder: (_, __) => const Divider(),
                 itemBuilder: (context, index) {
                   final zone = filteredZones[index];
-                  final isSystem = !dbZones.contains(zone);
+                  final isSystem = systemDefaults.contains(zone);
+                  final zoneData = dbZoneData.firstWhere((z) => z['name'] == zone, orElse: () => {});
+                  
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Container(
@@ -205,6 +212,10 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
                     subtitle: isSystem 
                       ? const Text("System Default", style: TextStyle(fontSize: 12)) 
                       : const Text("Custom Zone", style: TextStyle(fontSize: 12, color: Colors.green)),
+                    trailing: isSystem ? null : IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _handleDeleteZone(context, zoneData),
+                    ),
                   );
                 },
               );
@@ -251,7 +262,7 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showEditPriceDialog(context, price)),
-                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => DeliveryService().deleteZonePrice(price['id'])),
+                    IconButton(icon: const Icon(Icons.delete_outline, color: Colors.red), onPressed: () => _handleDeletePrice(context, price)),
                   ],
                 ),
               ),
@@ -367,6 +378,48 @@ class _AdminZonesScreenState extends State<AdminZonesScreen> {
             child: const Text("Update"),
           ),
         ],
+      ),
+    );
+  }
+
+  void _handleDeleteZone(BuildContext context, Map<String, dynamic> zone) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final id = zone['id'] as String;
+    
+    await DeliveryService().deleteZone(id);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text("Zone ${zone['name']} deleted"),
+        action: SnackBarAction(
+          label: "UNDO",
+          onPressed: () async {
+            final data = Map<String, dynamic>.from(zone);
+            data.remove('id');
+            await FirebaseFirestore.instance.collection('Zones').doc(id).set(data);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _handleDeletePrice(BuildContext context, Map<String, dynamic> price) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final id = price['id'] as String;
+    
+    await DeliveryService().deleteZonePrice(id);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text("Price rule deleted"),
+        action: SnackBarAction(
+          label: "UNDO",
+          onPressed: () async {
+            final data = Map<String, dynamic>.from(price);
+            data.remove('id');
+            await FirebaseFirestore.instance.collection('ZonePrices').doc(id).set(data);
+          },
+        ),
       ),
     );
   }

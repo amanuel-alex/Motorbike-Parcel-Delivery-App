@@ -6,6 +6,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/services/storage_service.dart';
 import 'confirm_delivery_screen.dart';
+import '../customer/order_chat_screen.dart';
 
 class ConfirmPickupScreen extends StatefulWidget {
   final String orderId;
@@ -112,6 +113,17 @@ class _ConfirmPickupScreenState extends State<ConfirmPickupScreen> {
         ),
         title: const Text('Stage 1: Confirm Pickup', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_outlined, color: AppColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => OrderChatScreen(deliveryId: widget.orderId, title: "Chat with Customer")),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

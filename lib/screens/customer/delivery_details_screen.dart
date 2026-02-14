@@ -81,11 +81,19 @@ class DeliveryDetailsScreen extends StatelessWidget {
                             color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(_getStatusIcon(currentDelivery.status), size: 40, color: Colors.white),
+                          child: Icon(
+                            currentDelivery.status == 'pending' && currentDelivery.paymentStatus == 'approved'
+                                ? Icons.radar // Radar icon for active searching
+                                : _getStatusIcon(currentDelivery.status), 
+                            size: 40, 
+                            color: Colors.white
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          currentDelivery.status.toUpperCase(),
+                          (currentDelivery.status == 'pending' && currentDelivery.paymentStatus == 'approved')
+                              ? 'SEARCHING RIDER'
+                              : currentDelivery.status.toUpperCase(),
                           style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
                         ),
                         const SizedBox(height: 8),

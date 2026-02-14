@@ -106,4 +106,9 @@ class AuthService {
       'status': status,
     });
   }
+
+  // Delete User (Admin)
+  Future<void> deleteUser(String uid) async {
+    await _firestore.collection('users').doc(uid).delete();
+  }
 }
