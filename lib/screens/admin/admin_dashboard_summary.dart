@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/services/delivery_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import 'system_health_screen.dart';
 
 class AdminDashboardSummary extends StatelessWidget {
   final Function(int) onTabChange;
@@ -56,7 +57,7 @@ class AdminDashboardSummary extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 1.5,
+                  childAspectRatio: 1.2,
                   children: [
                     _buildStatCard('Pending', stats['pendingDeliveries']?.toString() ?? '0', Icons.timer, Colors.orange),
                     _buildStatCard('Completed', stats['completedDeliveries']?.toString() ?? '0', Icons.check_circle, Colors.green),
@@ -73,7 +74,9 @@ class AdminDashboardSummary extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildQuickAction(context, 'Monitor Live Deliveries', Icons.track_changes, Colors.red, () => onTabChange(1)),
                 _buildQuickAction(context, 'Manage Pricing Rules', Icons.payments, Colors.teal, () => onTabChange(3)),
-                _buildQuickAction(context, 'System Health', Icons.security, Colors.blueGrey, () {}),
+                _buildQuickAction(context, 'System Health', Icons.security, Colors.blueGrey, () {
+                   Navigator.push(context, MaterialPageRoute(builder: (_) => const SystemHealthScreen()));
+                }),
               ],
             ),
           );
@@ -125,7 +128,7 @@ class AdminDashboardSummary extends StatelessWidget {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),

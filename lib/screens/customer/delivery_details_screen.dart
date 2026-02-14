@@ -150,7 +150,7 @@ class DeliveryDetailsScreen extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text('ETB ${currentDelivery.price.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                                    if (isAdmin)
+                                    if (isAdmin && currentDelivery.status != 'completed' && currentDelivery.status != 'canceled')
                                       IconButton(
                                         icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
                                         onPressed: () => _showEditPriceDialog(context, currentDelivery),

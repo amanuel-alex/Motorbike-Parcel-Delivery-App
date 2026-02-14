@@ -287,7 +287,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
                     final allDeliveries = snapshot.data ?? [];
                     // Only show Active ones on Home for better focus
-                    final activeDeliveries = allDeliveries.where((d) => d.status != 'completed' && d.status != 'canceled').toList();
+                    final activeDeliveries = allDeliveries.where((d) {
+                      if (d.status == 'canceled') return false;
+                      if (d.status == 'completed' && d.customerConfirmedAt != null) return false;
+                      return true;
+                    }).toList();
 
                     if (activeDeliveries.isEmpty && allDeliveries.isNotEmpty) {
                        return const Center(
@@ -349,8 +353,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             }
   
             final deliveries = snapshot.data ?? [];
-            final activeDeliveries = deliveries.where((d) => d.status != 'completed' && d.status != 'canceled').toList();
-            final pastDeliveries = deliveries.where((d) => d.status == 'completed' || d.status == 'canceled').toList();
+            final activeDeliveries = deliveries.where((d) {
+              if (d.status == 'canceled') return false;
+              if (d.status == 'completed' && d.customerConfirmedAt != null) return false;
+              return true;
+            }).toList();
+            final pastDeliveries = deliveries.where((d) {
+              if (d.status == 'canceled') return true;
+              if (d.status == 'completed' && d.customerConfirmedAt != null) return true;
+              return false;
+            }).toList();
   
             if (deliveries.isEmpty) {
               return Center(child: _buildEmptyState());
